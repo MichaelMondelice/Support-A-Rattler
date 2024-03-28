@@ -95,5 +95,5 @@ const styles = StyleSheet.create({
         color: '#4C6854',
     },
 });
-
+//place holder
 export default CustomerLoginScreen;
