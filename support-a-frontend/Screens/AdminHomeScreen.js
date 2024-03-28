@@ -41,17 +41,23 @@ const AdminHomeScreen = () => {
         }
     };
 
+    const handleUsersStatus = async () => {
+        try {
+            navigation.navigate('AdminUStatus'); // Use the name you registered in App.js
+        } catch (error) {
+            // Handle navigation error
+            console.error(error);
+        }
+    };
+
     return (
         <View style={styles.container}>
             <View style={styles.sidebar}>
                 <Image source={require('../images/logo.png')} style={styles.logo} />
-                <TouchableOpacity style={styles.sidebarItem}>
-                    <Text style={styles.sidebarText}>Home</Text>
-                </TouchableOpacity>
                 <TouchableOpacity onPress={handleUsersSearch} style={styles.sidebarItem}> {/* Use onPress with the handleUsersSearch function */}
                     <Text style={styles.sidebarText}>Search Users</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.sidebarItem}>
+                <TouchableOpacity onPress={handleUsersStatus} style={styles.sidebarItem}>
                     <Text style={styles.sidebarText}>Activate/ Deactivate Users</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.sidebarItem}>
