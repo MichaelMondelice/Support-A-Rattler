@@ -1,4 +1,3 @@
-// AdminSearchUsersScreen.js
 import React, { useState } from 'react';
 import { View, Text, TextInput, Button, FlatList, StyleSheet } from 'react-native';
 
@@ -19,10 +18,11 @@ const AdminSearchUsersScreen = () => {
             <TextInput
                 style={styles.searchInput}
                 placeholder="Search Users"
+                placeholderTextColor="#000000"
                 value={searchQuery}
                 onChangeText={setSearchQuery}
             />
-            <Button title="Search" onPress={handleSearch} />
+            <Button title="Search" onPress={handleSearch} color="#4CAF50" />
 
             <FlatList
                 data={searchResults}
@@ -44,14 +44,16 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         padding: 20,
+        backgroundColor: '#E8F5E9',
     },
     searchInput: {
         height: 40,
         borderWidth: 1,
-        borderColor: '#ccc',
+        borderColor: '#000000',
         borderRadius: 5,
         paddingHorizontal: 10,
         marginBottom: 10,
+        color: '#000000',
     },
     userItem: {
         borderBottomWidth: 1,
@@ -61,10 +63,11 @@ const styles = StyleSheet.create({
     userName: {
         fontSize: 18,
         fontWeight: 'bold',
+        color: '#4CAF50',
     },
     userEmail: {
         fontSize: 16,
-        color: 'gray',
+        color: '#4CAF50',
     },
     userList: {
         marginTop: 20,
