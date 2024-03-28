@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, TextInput, TouchableOpacity, Image, StyleSheet, ScrollView, Dimensions } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons'; // Make sure you have this package installed
 import { BarChart, LineChart, ProgressChart } from 'react-native-chart-kit';
+import { useNavigation } from '@react-navigation/native'; // Import the useNavigation hook
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -29,6 +30,17 @@ const progressChartData = {
 };
 
 const AdminHomeScreen = () => {
+    const navigation = useNavigation(); // Get the navigation object
+
+    const handleUsersSearch = async () => {
+        try {
+            navigation.navigate('AdminSearch'); // Use the name you registered in App.js
+        } catch (error) {
+            // Handle navigation error
+            console.error(error);
+        }
+    };
+
     return (
         <View style={styles.container}>
             <View style={styles.sidebar}>
@@ -36,7 +48,7 @@ const AdminHomeScreen = () => {
                 <TouchableOpacity style={styles.sidebarItem}>
                     <Text style={styles.sidebarText}>Home</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.sidebarItem}>
+                <TouchableOpacity onPress={handleUsersSearch} style={styles.sidebarItem}> {/* Use onPress with the handleUsersSearch function */}
                     <Text style={styles.sidebarText}>Search Users</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.sidebarItem}>
