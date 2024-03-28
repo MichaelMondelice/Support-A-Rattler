@@ -50,6 +50,15 @@ const AdminHomeScreen = () => {
         }
     };
 
+    const handleAdminReport = async () => {
+        try {
+            navigation.navigate('AdminReport'); // Use the name you registered in App.js
+        } catch (error) {
+            // Handle navigation error
+            console.error(error);
+        }
+    };
+
     return (
         <View style={styles.container}>
             <View style={styles.sidebar}>
@@ -58,9 +67,9 @@ const AdminHomeScreen = () => {
                     <Text style={styles.sidebarText}>Search Users</Text>
                 </TouchableOpacity>
                 <TouchableOpacity onPress={handleUsersStatus} style={styles.sidebarItem}>
-                    <Text style={styles.sidebarText}>Activate/ Deactivate Users</Text>
+                    <Text style={styles.sidebarText}>Activate/Deactivate Users</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.sidebarItem}>
+                <TouchableOpacity onPress={handleAdminReport} style={styles.sidebarItem}>
                     <Text style={styles.sidebarText}>Reports</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.sidebarItem}>
@@ -153,7 +162,7 @@ const styles = StyleSheet.create({
         paddingVertical: 15,
         paddingLeft: 20,
         borderBottomWidth: 1,
-        borderBottomColor: '##A5D6A7',
+        borderBottomColor: '#A5D6A7',
     },
     sidebarText: {
         fontSize: 18,
