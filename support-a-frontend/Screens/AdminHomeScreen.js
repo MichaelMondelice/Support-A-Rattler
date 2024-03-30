@@ -59,6 +59,15 @@ const AdminHomeScreen = () => {
         }
     };
 
+    const handleAdminMessages = async () => {
+        try {
+            navigation.navigate('AdminMessages'); // Use the name you registered in App.js
+        } catch (error) {
+            // Handle navigation error
+            console.error(error);
+        }
+    };
+
     return (
         <View style={styles.container}>
             <View style={styles.sidebar}>
@@ -72,7 +81,7 @@ const AdminHomeScreen = () => {
                 <TouchableOpacity onPress={handleAdminReport} style={styles.sidebarItem}>
                     <Text style={styles.sidebarText}>Reports</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.sidebarItem}>
+                <TouchableOpacity onPress={handleAdminMessages} style={styles.sidebarItem}>
                     <Text style={styles.sidebarText}>Message User</Text>
                 </TouchableOpacity>
             </View>

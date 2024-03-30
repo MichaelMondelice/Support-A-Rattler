@@ -12,7 +12,8 @@ import EntrepreneurHomeScreen from './Screens/EntrepreneurHomeScreen';
 import EntrepreneurSignUpScreen from './Screens/EntrepreneurSignUpScreen';
 import AdminSearchUsersScreen from './Screens/AdminSearchUsersScreen';
 import AdminUserStatusScreen from "./Screens/AdminUserStatusScreen";
-import AdminReportsScreen from "./Screens/AdminReportsScreen"; // Import AdminSearchUsersScreen
+import AdminReportsScreen from "./Screens/AdminReportsScreen";
+import AdminMessagesScreen from "./Screens/AdminMessagesScreen"; // Import AdminSearchUsersScreen
 
 const Stack = createNativeStackNavigator();
 
@@ -26,6 +27,7 @@ export default function App() {
                 <Stack.Screen name="AdminSearch" component={AdminSearchUsersScreen} options={{ title: 'Admin Search' }} />
                 <Stack.Screen name="AdminUStatus" component={AdminUserStatusScreen} options={{title: 'Admin User Status'}} />
                 <Stack.Screen name="AdminReport" component={AdminReportsScreen} options={{title: 'Admin Reports'}} />
+                <Stack.Screen name="AdminMessages" component={AdminMessagesScreen} options={{title: 'Admin Messages'}}/>
                 <Stack.Screen name="CustomerLogin" component={CustomerLoginScreen} options={{ title: 'Customer Login' }} />
                 <Stack.Screen name="CustomerHome" component={CustomerHomeScreen} options={{ title: 'Customer Home' }} />
                 <Stack.Screen name="CustomerSignUp" component={CustomerSignUpScreen} options={{ title: 'Customer Sign Up' }} />
