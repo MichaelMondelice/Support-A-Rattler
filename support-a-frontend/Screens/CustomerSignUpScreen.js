@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
-import { db } from "../firebase";
+import { db } from "../firebase"; // Use the imported db
 
 const CustomerSignUpScreen = ({ navigation }) => {
     const [firstName, setFirstName] = useState('');
@@ -40,13 +40,13 @@ const CustomerSignUpScreen = ({ navigation }) => {
                 role: 'Customer'
             };
 
-            await setDoc(doc(db, "users", user.uid), userData);
+            await setDoc(wdoc(db, "User", user.uid), userData);
 
             Alert.alert("Success", "User registered successfully");
             navigation.navigate('CustomerLogin');
         } catch (error) {
             console.error("Error adding user: ", error);
-            Alert.alert("Error", "Failed to register user");
+            Alert.alert("Error", error.message);
         }
     };
 

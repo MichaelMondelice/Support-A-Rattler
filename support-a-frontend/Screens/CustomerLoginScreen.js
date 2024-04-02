@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
-import { db } from "../firebase";
+import { db } from "../firebase"; // Use the imported db directly
 
 const CustomerLoginScreen = ({ navigation }) => {
     const [email, setEmail] = useState('');
@@ -26,7 +26,7 @@ const CustomerLoginScreen = ({ navigation }) => {
             const userCredential = await signInWithEmailAndPassword(auth, email, password);
             const user = userCredential.user;
 
-            const userRef = doc(db, "users", user.uid);
+            const userRef = doc(db, "User", user.uid); // Ensure the collection name matches the one used in the Firestore
             const docSnap = await getDoc(userRef);
 
             if (docSnap.exists()) {
