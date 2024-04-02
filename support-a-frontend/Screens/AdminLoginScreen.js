@@ -1,45 +1,58 @@
-// AdminLoginScreen.js
 import React, { useState } from 'react';
-import { View, TextInput, TouchableOpacity, Text,
-    Image, KeyboardAvoidingView, Button, StyleSheet } from 'react-native';
-import { firestore } from '../firebase';
-import { doc, setDoc } from "firebase/firestore";
+import { View, TextInput, TouchableOpacity, Text, Image, KeyboardAvoidingView, Button, StyleSheet, Alert } from 'react-native';
+import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "../firebase"; // Use the imported db directly
 
 const AdminLoginScreen = ({ navigation }) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [errorMessage, setErrorMessage] = useState('');
 
-    //----------------edit THIS------------------------------
-    // Implement your login logic here
     const handleLogin = async () => {
+        if (!email || !password) {
+            setErrorMessage("Please enter both email and password");
+            return;
+        }
+
+        const auth = getAuth();
         try {
-            // Your authentication logic here...
-            // If login is successful:
-            navigation.navigate('AdminHome'); // Use the name you registered in App.js
+            const userCredential = await signInWithEmailAndPassword(auth, email, password);
+            const user = userCredential.user;
+
+            const userRef = doc(db, "User", user.uid);
+            const docSnap = await getDoc(userRef);
+
+            if (docSnap.exists()) {
+                const userData = docSnap.data();
+                navigation.navigate('AdminHome', { userData });
+            } else {
+                setErrorMessage("No user data found");
+            }
         } catch (error) {
-            // Handle login error
-            console.error(error);
+            console.error("Login error: ", error);
+            Alert.alert("Login Error", error.message);
+            setErrorMessage(error.message);
         }
     };
-    //----------------edit THIS------------------------------
 
     return (
         <KeyboardAvoidingView style={styles.container} behavior="padding">
             <Image source={require('../images/logo.png')} style={styles.logo} />
             <Text style={styles.header}>Admin Sign in</Text>
+            {errorMessage ? (
+                <Text style={styles.errorMessage}>{errorMessage}</Text>
+            ) : null}
             <TextInput
                 style={styles.input}
-                placeholder="email"
-                placeholderTextColor="#666"
+                placeholder="Email"
                 value={email}
                 onChangeText={setEmail}
-                keyboardType="email-address"
                 autoCapitalize="none"
             />
             <TextInput
                 style={styles.input}
-                placeholder="password"
-                placeholderTextColor="#666"
+                placeholder="Password"
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry
@@ -47,7 +60,6 @@ const AdminLoginScreen = ({ navigation }) => {
             <TouchableOpacity style={styles.button} onPress={handleLogin}>
                 <Text style={styles.buttonText}>Sign In</Text>
             </TouchableOpacity>
-
         </KeyboardAvoidingView>
     );
 };
@@ -60,7 +72,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     logo: {
-        width: 200, // Adjust to your logo's dimensions
+        width: 200,
         height: 200,
         marginBottom: 30,
         resizeMode: 'contain',
@@ -93,11 +105,10 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         fontSize: 18,
     },
-    signUpText: {
-        marginTop: 20,
-        color: '#4C6854',
+    errorMessage: {
+        color: 'red',
+        marginBottom: 10,
     },
 });
-
 
 export default AdminLoginScreen;

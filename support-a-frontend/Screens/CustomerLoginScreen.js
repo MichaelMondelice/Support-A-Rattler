@@ -5,7 +5,8 @@ import {
     Text,
     KeyboardAvoidingView,
     StyleSheet,
-    Alert
+    Alert,
+    View // Import View for displaying error message
 } from 'react-native';
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
@@ -14,6 +15,7 @@ import { db } from "../firebase"; // Use the imported db directly
 const CustomerLoginScreen = ({ navigation }) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [errorMessage, setErrorMessage] = useState(''); // Initialize errorMessage state
 
     const handleLogin = async () => {
         if (!email || !password) {
@@ -38,6 +40,9 @@ const CustomerLoginScreen = ({ navigation }) => {
         } catch (error) {
             console.error("Login error: ", error);
             Alert.alert("Login Error", error.message);
+
+            // Set the error message state to display on the screen
+            setErrorMessage(error.message);
         }
     };
 
@@ -46,6 +51,11 @@ const CustomerLoginScreen = ({ navigation }) => {
             <Text style={styles.header}>Customer Sign In</Text>
             <TextInput style={styles.input} placeholder="Email" value={email} onChangeText={setEmail} autoCapitalize="none" />
             <TextInput style={styles.input} placeholder="Password" value={password} onChangeText={setPassword} secureTextEntry />
+            {errorMessage ? ( // Conditionally render error message
+                <View style={styles.errorMessageContainer}>
+                    <Text style={styles.errorMessage}>{errorMessage}</Text>
+                </View>
+            ) : null}
             <TouchableOpacity style={styles.button} onPress={handleLogin}>
                 <Text style={styles.buttonText}>Sign In</Text>
             </TouchableOpacity>
@@ -88,6 +98,12 @@ const styles = StyleSheet.create({
     signUpText: {
         marginTop: 20,
         color: '#4C6854',
+    },
+    errorMessageContainer: {
+        marginTop: 10,
+    },
+    errorMessage: {
+        color: 'red',
     },
 });
 
