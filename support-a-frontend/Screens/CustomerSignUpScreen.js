@@ -1,77 +1,82 @@
-//CustomerSignUpScreen
 import React, { useState } from 'react';
-import { View, TextInput, TouchableOpacity, Text,
-    Image, KeyboardAvoidingView, Button, StyleSheet } from 'react-native';
-import { firestore } from '../firebase';
-import { doc, setDoc } from "firebase/firestore";
-import { initializeApp } from "firebase/app";
+import {
+    TextInput,
+    TouchableOpacity,
+    Text,
+    KeyboardAvoidingView,
+    StyleSheet,
+    Alert
+} from 'react-native';
+import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
 import { collection, addDoc } from "firebase/firestore";
-import {db} from "../firebase"
+import { db } from "../firebase";
 
 const CustomerSignUpScreen = ({ navigation }) => {
     const [firstName, setFirstName] = useState('');
     const [lastName, setLastName] = useState('');
-    const [username, setUsername] = useState('');
+    const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [dateOfBirth, setDateOfBirth] = useState('');
+    const [gender, setGender] = useState('');
+    const [role, setRole] = useState('');
 
-//---------------------------------------------------------------
     const handleSignUp = async () => {
-        // You would typically pass in an object containing the new user's data
-        // Example userData object: { firstName: 'John', lastName: 'Doe', ... }
-
-        const userData = {
-            FirstName: firstName,
-            LastName: lastName,
-            UserName: username,
-            Password: password,
-            ConfirmPassword: confirmPassword
+        if (!firstName || !lastName || !email || !password || password !== confirmPassword) {
+            Alert.alert("Error", "All fields are required and passwords must match.");
+            return;
         }
-        try {
-            // Add a new document in collection "users" with the data from userData
-            const docRef = await addDoc(collection(db, "User"), userData);
-            console.log("User added with ID: ", docRef.id);
 
-            //DO NEXT
-            // Navigate to login screen after successful sign up
-            // Make sure you have navigation set up and available in your component
-            navigation.navigate('Login');
+        try {
+            const auth = getAuth();
+            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            console.log('User created:', userCredential.user);
+
+            const userData = {
+                name: `${firstName} ${lastName}`,
+                email: email,
+                dateOfBirth: dateOfBirth,
+                gender: gender,
+                isActive: true,
+                role: role,
+            };
+
+            const docRef = await addDoc(collection(db, "User"), userData);
+            console.log("User added to Firestore with ID: ", docRef.id);
+
+            Alert.alert("Success", "User registered successfully");
+            navigation.navigate('CustomerLogin');
         } catch (error) {
             console.error("Error adding user: ", error);
+            Alert.alert("Error", "Failed to register user");
         }
     };
-//---------------------------------------------------------------------------
+
     return (
         <KeyboardAvoidingView style={styles.container} behavior="padding">
             <Text style={styles.header}>Customer Sign Up</Text>
             <TextInput
                 style={styles.input}
                 placeholder="First Name"
-                placeholderTextColor="#666"
                 value={firstName}
                 onChangeText={setFirstName}
-                autoCapitalize="words"
             />
             <TextInput
                 style={styles.input}
                 placeholder="Last Name"
-                placeholderTextColor="#666"
                 value={lastName}
                 onChangeText={setLastName}
-                autoCapitalize="words"
             />
             <TextInput
                 style={styles.input}
-                placeholder="Username"
-                placeholderTextColor="#666"
-                value={username}
-                onChangeText={setUsername}
+                placeholder="Email"
+                value={email}
+                onChangeText={setEmail}
                 autoCapitalize="none"
             />
             <TextInput
                 style={styles.input}
                 placeholder="Password"
-                placeholderTextColor="#666"
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry
@@ -79,10 +84,21 @@ const CustomerSignUpScreen = ({ navigation }) => {
             <TextInput
                 style={styles.input}
                 placeholder="Confirm Password"
-                placeholderTextColor="#666"
                 value={confirmPassword}
                 onChangeText={setConfirmPassword}
                 secureTextEntry
+            />
+            <TextInput
+                style={styles.input}
+                placeholder="Date of Birth"
+                value={dateOfBirth}
+                onChangeText={setDateOfBirth}
+            />
+            <TextInput
+                style={styles.input}
+                placeholder="Gender"
+                value={gender}
+                onChangeText={setGender}
             />
             <TouchableOpacity style={styles.button} onPress={handleSignUp}>
                 <Text style={styles.buttonText}>Sign Up</Text>
@@ -94,39 +110,31 @@ const CustomerSignUpScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#DFF2E3',
+        backgroundColor: '#fff',
         alignItems: 'center',
         justifyContent: 'center',
     },
     header: {
         fontSize: 24,
-        fontWeight: 'bold',
-        marginBottom: 30,
-        color: '#4C6854',
+        marginBottom: 20,
     },
     input: {
-        borderBottomWidth: 1,
-        borderBottomColor: '#4C6854',
-        fontSize: 16,
-        height: 40,
-        marginTop: 10,
-        marginBottom: 20,
-        color: '#4C6854',
         width: '80%',
+        marginVertical: 10,
+        padding: 10,
+        borderWidth: 1,
+        borderColor: 'gray',
+        borderRadius: 5,
     },
     button: {
-        backgroundColor: '#CDEACE',
-        borderRadius: 20,
-        paddingVertical: 12,
-        paddingHorizontal: 30,
+        backgroundColor: 'blue',
+        padding: 10,
+        borderRadius: 5,
         marginTop: 10,
     },
     buttonText: {
-        color: '#4C6854',
-        fontWeight: 'bold',
-        fontSize: 18,
+        color: 'white',
     },
-    // Add any additional styles you need here
 });
 
 export default CustomerSignUpScreen;

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Image } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
-// Dummy data for users
+// Dummy data for user
 const users = [
     { id: '1', name: 'John Doe', status: 'Active' },
     { id: '2', name: 'Jane Smith', status: 'Inactive' },
