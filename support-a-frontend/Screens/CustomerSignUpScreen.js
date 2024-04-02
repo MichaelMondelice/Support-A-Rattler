@@ -110,31 +110,39 @@ const CustomerSignUpScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#fff',
+        backgroundColor: '#DFF2E3',
         alignItems: 'center',
         justifyContent: 'center',
     },
     header: {
         fontSize: 24,
-        marginBottom: 20,
+        fontWeight: 'bold',
+        marginBottom: 30,
+        color: '#4C6854',
     },
     input: {
+        borderBottomWidth: 1,
+        borderBottomColor: '#4C6854',
+        fontSize: 16,
+        height: 40,
+        marginTop: 10,
+        marginBottom: 20,
+        color: '#4C6854',
         width: '80%',
-        marginVertical: 10,
-        padding: 10,
-        borderWidth: 1,
-        borderColor: 'gray',
-        borderRadius: 5,
     },
     button: {
-        backgroundColor: 'blue',
-        padding: 10,
-        borderRadius: 5,
+        backgroundColor: '#CDEACE',
+        borderRadius: 20,
+        paddingVertical: 12,
+        paddingHorizontal: 30,
         marginTop: 10,
     },
     buttonText: {
-        color: 'white',
+        color: '#4C6854',
+        fontWeight: 'bold',
+        fontSize: 18,
     },
+    // Add any additional styles you need here
 });
 
 export default CustomerSignUpScreen;
