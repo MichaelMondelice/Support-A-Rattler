@@ -1,36 +1,68 @@
-// EntrepreneurSignUpScreen.js
 import React, { useState } from 'react';
-import { View, TextInput, TouchableOpacity, Text,
-    Image, KeyboardAvoidingView, Button, StyleSheet } from 'react-native';
-import { initializeApp } from "firebase/app";
-import { getFirestore, collection, addDoc } from "firebase/firestore";
-import { firestore } from '../firebase';
-import { doc, setDoc } from "firebase/firestore";
+import {
+    TextInput,
+    TouchableOpacity,
+    Text,
+    KeyboardAvoidingView,
+    StyleSheet,
+    Alert
+} from 'react-native';
+import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
+import { doc, setDoc } from "firebase/firestore";  // Use setDoc for specifying the document ID
+import { db } from "../firebase";
 
 const EntrepreneurSignUpScreen = ({ navigation }) => {
     const [firstName, setFirstName] = useState('');
     const [lastName, setLastName] = useState('');
-    const [username, setUsername] = useState('');
+    const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [dateOfBirth, setDateOfBirth] = useState('');
+    const [gender, setGender] = useState('');
+    const [role, setRole] = useState('Entrepreneur');  // Assuming role is set here
 
-//---------------------------------------------------------------
-    // Implement your sign-up logic here
+
+    const auth = getAuth();
+    createUserWithEmailAndPassword(auth, email, password)
+        .then((userCredential) => {
+            // User is created in Firebase Authentication
+            console.log("Account created in Firebase Auth:", userCredential.user);
+            // You can then navigate or perform other actions
+        })
+        .catch((error) => {
+            console.error("Error creating user in Firebase Auth:", error);
+        });
+
     const handleSignUp = async () => {
-        // Sign-up logic, including validation that the passwords match, etc.
-        if (password !== confirmPassword) {
-            alert("Passwords don't match.");
+        if (!firstName || !lastName || !email || !password || password !== confirmPassword) {
+            Alert.alert("Error", "All fields are required and passwords must match.");
             return;
         }
+
+        const auth = getAuth();
         try {
-            // Assuming you have a method to create users, e.g., createCustomer(...)
-            // await createCustomer(firstName, lastName, username, password);
-            console.log('Customer created!'); // Placeholder for success
+            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            const user = userCredential.user;
+
+            const userData = {
+                name: `${firstName} ${lastName}`,
+                email: email,
+                dateOfBirth: dateOfBirth,
+                gender: gender,
+                isActive: true,
+                role: role,
+            };
+
+            await setDoc(doc(db, "User" , user.uid), userData);
+            console.log("Entrepreneur added to Firestore with ID: ", user.uid);
+
+            Alert.alert("Success", "Entrepreneur registered successfully");
+            navigation.navigate('EntrepreneurLogin');
         } catch (error) {
-            console.error(error); // Placeholder for error handling
+            console.error("Error adding entrepreneur: ", error);
+            Alert.alert("Error", "Failed to register entrepreneur");
         }
     };
-//---------------------------------------------------------------------------
 
     return (
         <KeyboardAvoidingView style={styles.container} behavior="padding">
@@ -38,31 +70,25 @@ const EntrepreneurSignUpScreen = ({ navigation }) => {
             <TextInput
                 style={styles.input}
                 placeholder="First Name"
-                placeholderTextColor="#666"
                 value={firstName}
                 onChangeText={setFirstName}
-                autoCapitalize="words"
             />
             <TextInput
                 style={styles.input}
                 placeholder="Last Name"
-                placeholderTextColor="#666"
                 value={lastName}
                 onChangeText={setLastName}
-                autoCapitalize="words"
             />
             <TextInput
                 style={styles.input}
-                placeholder="Username"
-                placeholderTextColor="#666"
-                value={username}
-                onChangeText={setUsername}
+                placeholder="Email"
+                value={email}
+                onChangeText={setEmail}
                 autoCapitalize="none"
             />
             <TextInput
                 style={styles.input}
                 placeholder="Password"
-                placeholderTextColor="#666"
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry
@@ -70,10 +96,21 @@ const EntrepreneurSignUpScreen = ({ navigation }) => {
             <TextInput
                 style={styles.input}
                 placeholder="Confirm Password"
-                placeholderTextColor="#666"
                 value={confirmPassword}
                 onChangeText={setConfirmPassword}
                 secureTextEntry
+            />
+            <TextInput
+                style={styles.input}
+                placeholder="Date of Birth"
+                value={dateOfBirth}
+                onChangeText={setDateOfBirth}
+            />
+            <TextInput
+                style={styles.input}
+                placeholder="Gender"
+                value={gender}
+                onChangeText={setGender}
             />
             <TouchableOpacity style={styles.button} onPress={handleSignUp}>
                 <Text style={styles.buttonText}>Sign Up</Text>
@@ -85,39 +122,32 @@ const EntrepreneurSignUpScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#DFF2E3',
+        backgroundColor: '#fff',
         alignItems: 'center',
         justifyContent: 'center',
     },
     header: {
         fontSize: 24,
-        fontWeight: 'bold',
-        marginBottom: 30,
-        color: '#4C6854',
+        marginBottom: 20,
     },
     input: {
-        borderBottomWidth: 1,
-        borderBottomColor: '#4C6854',
-        fontSize: 16,
-        height: 40,
-        marginTop: 10,
-        marginBottom: 20,
-        color: '#4C6854',
         width: '80%',
+        marginVertical: 10,
+        padding: 10,
+        borderWidth: 1,
+        borderColor: 'gray',
+        borderRadius: 5,
     },
     button: {
-        backgroundColor: '#CDEACE',
-        borderRadius: 20,
-        paddingVertical: 12,
-        paddingHorizontal: 30,
+        backgroundColor: 'blue',
+        padding: 10,
+        borderRadius: 5,
         marginTop: 10,
     },
     buttonText: {
-        color: '#4C6854',
-        fontWeight: 'bold',
-        fontSize: 18,
+        color: 'white',
     },
-    // Add any additional styles you need here
 });
 
 export default EntrepreneurSignUpScreen;
+

@@ -1,35 +1,34 @@
-// EntrepreneurLoginScreen.js
 import React, { useState } from 'react';
-import { View, TextInput, TouchableOpacity, Text,
-    Image, KeyboardAvoidingView, Button, StyleSheet } from 'react-native';
-import { firestore } from '../firebase';
-import { doc, setDoc } from "firebase/firestore";
-
+import { TextInput, TouchableOpacity, Text, KeyboardAvoidingView, StyleSheet, Alert } from 'react-native';
+import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 
 const EntrepreneurLoginScreen = ({ navigation }) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
 
-//----------------edit THIS------------------------------
-    // Implement your login logic here
     const handleLogin = async () => {
+        if (!email || !password) {
+            Alert.alert("Error", "Please enter both email and password");
+            return;
+        }
+
+        const auth = getAuth();
         try {
-            // Authentication logic...
-            navigation.navigate('EntrepreneurHome'); // Navigate on successful login
+            const userCredential = await signInWithEmailAndPassword(auth, email, password);
+            // If successful, navigate to EntrepreneurHome
+            navigation.navigate('EntrepreneurHome', { userData: userCredential.user });
         } catch (error) {
-            // Handle errors
+            console.error("Login error: ", error);
+            Alert.alert("Login Error", error.message);
         }
     };
-    //----------------edit THIS------------------------------
 
     return (
         <KeyboardAvoidingView style={styles.container} behavior="padding">
-            <Image source={require('../images/logo.png')} style={styles.logo} />
-            <Text style={styles.header}>Entrepreneur Sign in</Text>
+            <Text style={styles.header}>Entrepreneur Sign In</Text>
             <TextInput
                 style={styles.input}
-                placeholder="email"
-                placeholderTextColor="#666"
+                placeholder="Email"
                 value={email}
                 onChangeText={setEmail}
                 keyboardType="email-address"
@@ -37,8 +36,7 @@ const EntrepreneurLoginScreen = ({ navigation }) => {
             />
             <TextInput
                 style={styles.input}
-                placeholder="password"
-                placeholderTextColor="#666"
+                placeholder="Password"
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry
@@ -60,38 +58,26 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
     },
-    logo: {
-        width: 200, // Adjust to your logo's dimensions
-        height: 200,
-        marginBottom: 30,
-        resizeMode: 'contain',
-    },
     header: {
         fontSize: 24,
-        fontWeight: 'bold',
-        marginBottom: 30,
+        marginBottom: 20,
         color: '#4C6854',
     },
     input: {
+        width: '80%',
+        marginVertical: 10,
+        padding: 10,
         borderBottomWidth: 1,
         borderBottomColor: '#4C6854',
-        fontSize: 16,
-        height: 40,
-        marginTop: 10,
-        marginBottom: 20,
-        color: '#4C6854',
-        width: '80%',
     },
     button: {
         backgroundColor: '#CDEACE',
+        padding: 12,
         borderRadius: 20,
-        paddingVertical: 12,
-        paddingHorizontal: 30,
         marginTop: 10,
     },
     buttonText: {
         color: '#4C6854',
-        fontWeight: 'bold',
         fontSize: 18,
     },
     signUpText: {
@@ -101,3 +87,4 @@ const styles = StyleSheet.create({
 });
 
 export default EntrepreneurLoginScreen;
+

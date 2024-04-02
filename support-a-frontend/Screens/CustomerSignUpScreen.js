@@ -8,7 +8,7 @@ import {
     Alert
 } from 'react-native';
 import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
-import { collection, addDoc } from "firebase/firestore";
+import { doc, setDoc } from "firebase/firestore";
 import { db } from "../firebase";
 
 const CustomerSignUpScreen = ({ navigation }) => {
@@ -19,7 +19,6 @@ const CustomerSignUpScreen = ({ navigation }) => {
     const [confirmPassword, setConfirmPassword] = useState('');
     const [dateOfBirth, setDateOfBirth] = useState('');
     const [gender, setGender] = useState('');
-    const [role, setRole] = useState('');
 
     const handleSignUp = async () => {
         if (!firstName || !lastName || !email || !password || password !== confirmPassword) {
@@ -27,22 +26,21 @@ const CustomerSignUpScreen = ({ navigation }) => {
             return;
         }
 
+        const auth = getAuth();
         try {
-            const auth = getAuth();
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-            console.log('User created:', userCredential.user);
+            const user = userCredential.user;
 
             const userData = {
-                name: `${firstName} ${lastName}`,
-                email: email,
-                dateOfBirth: dateOfBirth,
-                gender: gender,
-                isActive: true,
-                role: role,
+                firstName,
+                lastName,
+                email,
+                dateOfBirth,
+                gender,
+                role: 'Customer'
             };
 
-            const docRef = await addDoc(collection(db, "User"), userData);
-            console.log("User added to Firestore with ID: ", docRef.id);
+            await setDoc(doc(db, "users", user.uid), userData);
 
             Alert.alert("Success", "User registered successfully");
             navigation.navigate('CustomerLogin');
@@ -55,51 +53,13 @@ const CustomerSignUpScreen = ({ navigation }) => {
     return (
         <KeyboardAvoidingView style={styles.container} behavior="padding">
             <Text style={styles.header}>Customer Sign Up</Text>
-            <TextInput
-                style={styles.input}
-                placeholder="First Name"
-                value={firstName}
-                onChangeText={setFirstName}
-            />
-            <TextInput
-                style={styles.input}
-                placeholder="Last Name"
-                value={lastName}
-                onChangeText={setLastName}
-            />
-            <TextInput
-                style={styles.input}
-                placeholder="Email"
-                value={email}
-                onChangeText={setEmail}
-                autoCapitalize="none"
-            />
-            <TextInput
-                style={styles.input}
-                placeholder="Password"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-            />
-            <TextInput
-                style={styles.input}
-                placeholder="Confirm Password"
-                value={confirmPassword}
-                onChangeText={setConfirmPassword}
-                secureTextEntry
-            />
-            <TextInput
-                style={styles.input}
-                placeholder="Date of Birth"
-                value={dateOfBirth}
-                onChangeText={setDateOfBirth}
-            />
-            <TextInput
-                style={styles.input}
-                placeholder="Gender"
-                value={gender}
-                onChangeText={setGender}
-            />
+            <TextInput style={styles.input} placeholder="First Name" value={firstName} onChangeText={setFirstName} />
+            <TextInput style={styles.input} placeholder="Last Name" value={lastName} onChangeText={setLastName} />
+            <TextInput style={styles.input} placeholder="Email" value={email} onChangeText={setEmail} autoCapitalize="none" />
+            <TextInput style={styles.input} placeholder="Password" value={password} onChangeText={setPassword} secureTextEntry />
+            <TextInput style={styles.input} placeholder="Confirm Password" value={confirmPassword} onChangeText={setConfirmPassword} secureTextEntry />
+            <TextInput style={styles.input} placeholder="Date of Birth" value={dateOfBirth} onChangeText={setDateOfBirth} />
+            <TextInput style={styles.input} placeholder="Gender" value={gender} onChangeText={setGender} />
             <TouchableOpacity style={styles.button} onPress={handleSignUp}>
                 <Text style={styles.buttonText}>Sign Up</Text>
             </TouchableOpacity>
@@ -138,3 +98,4 @@ const styles = StyleSheet.create({
 });
 
 export default CustomerSignUpScreen;
+

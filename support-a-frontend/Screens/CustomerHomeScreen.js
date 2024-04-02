@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     View, TextInput, TouchableOpacity, Text,
-    Image, KeyboardAvoidingView, Button, StyleSheet, ScrollView
+    Image, StyleSheet, ScrollView, Alert
 } from 'react-native';
-import { firestore } from '../firebase';
-import { doc, setDoc } from "firebase/firestore";
-import { MaterialCommunityIcons, FontAwesome, Feather, Entypo } from '@expo/vector-icons';
+import { MaterialCommunityIcons, FontAwesome, wFeather, Entypo } from '@expo/vector-icons';
+import { doc, getDoc } from "firebase/firestore";
+import { getAuth } from "firebase/auth";
+import { db } from "../firebase";
 
 const initialServices = [
     { id: '1', name: 'Styles By Sarah', category: 'Hair', priceRange: '$100-$200', rating: 4.8, liked: false, image: require('../images/img_1.png') },
@@ -13,51 +14,37 @@ const initialServices = [
     { id: '3', name: 'Nails by Ana', category: 'Nails', priceRange: '$50-$100', rating: 4.9, liked: false, image: require('../images/img_3.png') },
     { id: '4', name: 'Laura Tutoring', category: 'Tutoring', priceRange: '$10-$50', rating: 4.3, liked: false, image: require('../images/img_4.png') },
     { id: '5', name: 'Cuts By Camryn', category: 'Hair', priceRange: '$30-$70', rating: 4.8, liked: false, image: require('../images/img_5.png') }
-    // Add more services
 ];
 
 const categories = [
     { id: 'hair', title: 'Hair', icon: 'hair-dryer' },
     { id: 'makeup', title: 'Makeup', icon: 'palette' },
     { id: 'nails', title: 'Nails', icon: 'nail' },
-    { id: 'food', title: 'Food', icon: 'food' },
-    // Add more categories if needed
+    { id: 'food', title: 'Food', icon: 'food' }
 ];
 
 const CustomerHomeScreen = ({ navigation }) => {
-    // Dummy data and rest of your component code ...
-
-    // Function placeholders for onPress actions
-
+    const [userData, setUserData] = useState(null);
+    const [services, setServices] = useState(initialServices);
     const [activeCategory, setActiveCategory] = useState(null);
 
-    const handleSelectCategory = (id) => {
-        setActiveCategory(id);
-    };
+    useEffect(() => {
+        const fetchUserData = async () => {
+            const auth = getAuth();
+            const user = auth.currentUser;
+            if (user) {
+                const userRef = doc(db, "users", user.uid);
+                const docSnap = await getDoc(userRef);
+                if (docSnap.exists()) {
+                    setUserData(docSnap.data());
+                } else {
+                    Alert.alert("Error", "No user data found");
+                }
+            }
+        };
 
-    const handlePressHome = () => {
-        console.log('Home Pressed');
-        // navigation.navigate('HomeScreen'); // or whatever screen you want to navigate to
-    };
-
-    const handlePressSearch = () => {
-        console.log('Search Pressed');
-        // navigation.navigate('SearchScreen');
-    };
-
-    const handlePressMessages = () => {
-        console.log('Messages Pressed');
-        // navigation.navigate('MessagesScreen');
-    };
-
-    const handlePressMore = () => {
-        console.log('More Pressed');
-        // navigation.navigate('MoreScreen');
-    };
-
-
-
-    const [services, setServices] = useState(initialServices);
+        fetchUserData();
+    }, []);
 
     const toggleLike = (id) => {
         setServices(services.map(service => {
@@ -72,9 +59,8 @@ const CustomerHomeScreen = ({ navigation }) => {
         <ScrollView style={styles.container}>
             <View style={styles.header}>
                 <Image source={require('../images/img.png')} style={styles.profilePic} />
-                <Text style={styles.welcome}>Welcome</Text>
+                <Text style={styles.welcome}>Welcome, {userData ? userData.name : 'Guest'}</Text>
                 <View style={styles.searchSection}>
-
                     <TextInput
                         style={styles.input}
                         placeholder="Search"
@@ -82,7 +68,6 @@ const CustomerHomeScreen = ({ navigation }) => {
                     />
                     <MaterialCommunityIcons name="magnify" size={24} color="#4C6854" style={styles.searchIcon} />
                     <FontAwesome name="bell-o" size={24} color="black" style={styles.bellIcon} />
-
                 </View>
             </View>
             {/* Category Section */}
@@ -102,12 +87,10 @@ const CustomerHomeScreen = ({ navigation }) => {
                 ))}
             </View>
 
-
             <Text style={styles.recommended}>Recommended</Text>
             {services.map((service) => (
                 <View key={service.id} style={styles.card}>
                     <Image source={service.image} style={styles.cardImage} />
-
                     <View style={styles.cardContent}>
                         <Text style={styles.cardTitle}>{service.name}</Text>
                         <Text style={styles.cardSubTitle}>{service.category}</Text>
@@ -122,91 +105,30 @@ const CustomerHomeScreen = ({ navigation }) => {
                     </TouchableOpacity>
                 </View>
             ))}
-
-
-            {/* Bottom Navigation */}
-            <View style={styles.bottomNav}>
-                <TouchableOpacity style={styles.navItem} onPress={handlePressHome}>
-                    <Feather name="home" size={24} color="#4C6854" />
-                    <Text style={styles.navLabel}>Home</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.navItem} onPress={handlePressSearch}>
-                    <Feather name="search" size={24} color="#4C6854" />
-                    <Text style={styles.navLabel}>Search</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.navItem} onPress={handlePressMessages}>
-                    <MaterialCommunityIcons name="message-text" size={24} color="#4C6854" />
-                    <Text style={styles.navLabel}>Messages</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.navItem} onPress={handlePressMore}>
-                    <Entypo name="dots-three-horizontal" size={24} color="#4C6854" />
-                    <Text style={styles.navLabel}>More</Text>
-                </TouchableOpacity>
-            </View>
         </ScrollView>
     );
 };
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#DFF2E3',
-    },
-    header: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        backgroundColor: '#DFF2E3', // Header background color
-        paddingHorizontal: 10,
-        paddingVertical: 15,
-    },
-    profilePic: {
-        width: 60,
-        height: 60,
-        borderRadius: 30,
-        borderColor: '#4C6854', // Border color from the image
-        borderWidth: 2,
-    },
-    welcome: {
-        fontSize: 18,
-        fontWeight: 'bold',
-    },
-    recommended: {
-        fontSize: 18,
-        fontWeight: 'bold',
-    },
-    searchSection: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: '#f0f0f0', // Slightly off-white background for search
-        borderRadius: 20,
-        flex: 1,
-        paddingHorizontal: 10,
-        height: 40, // Adjust the height as needed
-        marginLeft: 10,
-    },
-    searchIcon: {
-        marginRight: 5,
-        padding: 10,
-        color: 'grey',
-    },
-    input: {
-        flex: 1,
-        paddingVertical: 5,
-        color: '#4C6854', // Text color from the image
+    activeCategory: {
+        borderBottomWidth: 2,
+        borderBottomColor: '#4C6854',
     },
     bellIcon: {
         marginLeft: 10,
         padding: 10,
         color: 'grey',
     },
-    categoryContainer: {
+    bottomNav: {
         flexDirection: 'row',
         justifyContent: 'space-around',
-        marginVertical: 20,
+        borderTopWidth: 1,
+        borderTopColor: '#E0E0E0',
+        backgroundColor: '#FFFFFF',
+        paddingBottom: 10,
     },
     card: {
-        backgroundColor: '#ffffff', // Assuming cards are white
+        backgroundColor: '#ffffff',
         borderRadius: 10,
         padding: 15,
         flexDirection: 'row',
@@ -221,21 +143,18 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.2,
         shadowRadius: 1.41,
         elevation: 2,
-        marginHorizontal: 20, // Side margins for card spacing from screen edges
+        marginHorizontal: 20,
+    },
+    cardContent: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'flex-start',
+        marginLeft: 12,
     },
     cardImage: {
-        width: 50, // Small logo size, adjust as needed
+        width: 50,
         height: 50,
-        borderRadius: 25, // Fully rounded corners for a circular image
-    },
-    cardTitle: {
-        fontWeight: 'bold',
-        fontSize: 16,
-        color: '#333',
-    },
-    cardSubtitle: {
-        fontSize: 14,
-        color: 'grey',
+        borderRadius: 25,
     },
     cardPrice: {
         fontSize: 14,
@@ -245,52 +164,78 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
     },
-    ratingIcon: {
-        color: 'gold', // Assuming a gold color for rating stars
-        marginRight: 5, // Space between star icon and rating number
+    cardSubTitle: {
+        fontSize: 14,
+        color: 'grey',
+    },
+    cardTitle: {
+        fontWeight: 'bold',
+        fontSize: 16,
+        color: '#333',
+    },
+    categoryContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+        marginVertical: 20,
+    },
+    categoryIcon: {
+        alignItems: 'center',
+    },
+    container: {
+        flex: 1,
+        backgroundColor: '#DFF2E3',
+    },
+    header: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        backgroundColor: '#DFF2E3',
+        paddingHorizontal: 10,
+        paddingVertical: 15,
+    },
+    input: {
+        flex: 1,
+        paddingVertical: 5,
+        color: '#4C6854',
+    },
+    navItem: {
+        alignItems: 'center',
+        padding: 5,
+    },
+    navLabel: {
+        color: '#4C6854',
+        fontSize: 12,
+    },
+    profilePic: {
+        width: 60,
+        height: 60,
+        borderRadius: 30,
+        borderColor: '#4C6854',
+        borderWidth: 2,
     },
     ratingText: {
         fontSize: 14,
         color: '#333',
     },
-    cardContent: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'flex-start', // Align content to the start of the card (left)
-        marginLeft: 12, // Spacing between image and content
+    recommended: undefined,
+    searchIcon: {
+        marginRight: 5,
+        padding: 10,
+        color: 'grey',
     },
-    cardSubTitle: {
-        fontSize: 14,
-        color: '#A5A5A5', // A softer color for the subtitle
-        marginTop: 4, // Spacing between title and subtitle
-    },
-    bottomNav: {
+    searchSection: {
         flexDirection: 'row',
-        justifyContent: 'space-around',
-        borderTopWidth: 1,
-        borderTopColor: '#E0E0E0',
-        backgroundColor: '#FFFFFF',
-        paddingBottom: 10, // safe area for iPhone without home button
-    },
-    navItem: {
-        alignItems: 'center', // Center the icon and text
-        padding: 5,
-    },
-    navLabel: {
-        color: '#4C6854', // Color for the text label
-        fontSize: 12, // Smaller font size for the label
-    },
-
-    categoryIcon: {
         alignItems: 'center',
-        // Style your category icon container here
-    },
-    activeCategory: {
-        // Styles for the active category
-        borderBottomWidth: 2,
-        borderBottomColor: '#4C6854',
-    },
-    // Add any additional styles you need here
+        backgroundColor: '#f0f0f0',
+        borderRadius: 20,
+        flex: 1,
+        paddingHorizontal: 10,
+        height: 40,
+        marginLeft: 10,
+    }, welcome: {
+        fontSize: 18,
+        fontWeight: 'bold',
+    }
 
 });
 

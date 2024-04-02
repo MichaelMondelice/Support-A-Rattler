@@ -1,45 +1,51 @@
-// CustomerLoginScreen.js
 import React, { useState } from 'react';
-import { View, TextInput, TouchableOpacity, Text,
-    Image, KeyboardAvoidingView, Button, StyleSheet } from 'react-native';
-import { firestore } from '../firebase';
-import { doc, setDoc } from "firebase/firestore";
+import {
+    TextInput,
+    TouchableOpacity,
+    Text,
+    KeyboardAvoidingView,
+    StyleSheet,
+    Alert
+} from 'react-native';
+import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "../firebase";
 
 const CustomerLoginScreen = ({ navigation }) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
 
-    // Implement your login logic here
     const handleLogin = async () => {
+        if (!email || !password) {
+            Alert.alert("Error", "Please enter both email and password");
+            return;
+        }
+
+        const auth = getAuth();
         try {
-            // Authentication logic for customer...
-            navigation.navigate('CustomerHome'); // Navigate to Customer Home on successful login
+            const userCredential = await signInWithEmailAndPassword(auth, email, password);
+            const user = userCredential.user;
+
+            const userRef = doc(db, "users", user.uid);
+            const docSnap = await getDoc(userRef);
+
+            if (docSnap.exists()) {
+                const userData = docSnap.data();
+                navigation.navigate('CustomerHome', { userData });
+            } else {
+                Alert.alert("Error", "No user data found");
+            }
         } catch (error) {
-            // Handle login errors
+            console.error("Login error: ", error);
+            Alert.alert("Login Error", error.message);
         }
     };
 
     return (
         <KeyboardAvoidingView style={styles.container} behavior="padding">
-            <Image source={require('../images/logo.png')} style={styles.logo} />
-            <Text style={styles.header}>Customer Sign in</Text>
-            <TextInput
-                style={styles.input}
-                placeholder="email"
-                placeholderTextColor="#666"
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                autoCapitalize="none"
-            />
-            <TextInput
-                style={styles.input}
-                placeholder="password"
-                placeholderTextColor="#666"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-            />
+            <Text style={styles.header}>Customer Sign In</Text>
+            <TextInput style={styles.input} placeholder="Email" value={email} onChangeText={setEmail} autoCapitalize="none" />
+            <TextInput style={styles.input} placeholder="Password" value={password} onChangeText={setPassword} secureTextEntry />
             <TouchableOpacity style={styles.button} onPress={handleLogin}>
                 <Text style={styles.buttonText}>Sign In</Text>
             </TouchableOpacity>
@@ -49,6 +55,7 @@ const CustomerLoginScreen = ({ navigation }) => {
         </KeyboardAvoidingView>
     );
 };
+
 const styles = StyleSheet.create({
     container: {
         flex: 1,
@@ -56,38 +63,26 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
     },
-    logo: {
-        width: 200, // Adjust to your logo's dimensions
-        height: 200,
-        marginBottom: 30,
-        resizeMode: 'contain',
-    },
     header: {
         fontSize: 24,
-        fontWeight: 'bold',
-        marginBottom: 30,
+        marginBottom: 20,
         color: '#4C6854',
     },
     input: {
+        width: '80%',
+        marginVertical: 10,
+        padding: 10,
         borderBottomWidth: 1,
         borderBottomColor: '#4C6854',
-        fontSize: 16,
-        height: 40,
-        marginTop: 10,
-        marginBottom: 20,
-        color: '#4C6854',
-        width: '80%',
     },
     button: {
         backgroundColor: '#CDEACE',
+        padding: 12,
         borderRadius: 20,
-        paddingVertical: 12,
-        paddingHorizontal: 30,
         marginTop: 10,
     },
     buttonText: {
         color: '#4C6854',
-        fontWeight: 'bold',
         fontSize: 18,
     },
     signUpText: {
@@ -95,5 +90,5 @@ const styles = StyleSheet.create({
         color: '#4C6854',
     },
 });
-//place holder
+
 export default CustomerLoginScreen;
