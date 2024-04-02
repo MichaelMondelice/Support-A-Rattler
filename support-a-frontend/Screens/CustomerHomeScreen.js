@@ -3,7 +3,7 @@ import {
     View, TextInput, TouchableOpacity, Text,
     Image, StyleSheet, ScrollView, Alert
 } from 'react-native';
-import { MaterialCommunityIcons, FontAwesome, wFeather, Entypo } from '@expo/vector-icons';
+import { MaterialCommunityIcons, FontAwesome } from '@expo/vector-icons';
 import { doc, getDoc } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import { db } from "../firebase";
@@ -23,7 +23,7 @@ const categories = [
     { id: 'food', title: 'Food', icon: 'food' }
 ];
 
-const CustomerHomeScreen = ({ navigation }) => {
+const CustomerHomeScreen = () => { // Removed unused navigation parameter
     const [userData, setUserData] = useState(null);
     const [services, setServices] = useState(initialServices);
     const [activeCategory, setActiveCategory] = useState(null);
@@ -33,17 +33,22 @@ const CustomerHomeScreen = ({ navigation }) => {
             const auth = getAuth();
             const user = auth.currentUser;
             if (user) {
-                const userRef = doc(db, "users", user.uid);
-                const docSnap = await getDoc(userRef);
-                if (docSnap.exists()) {
-                    setUserData(docSnap.data());
-                } else {
-                    Alert.alert("Error", "No user data found");
+                const userRef = doc(db, "User", user.uid);
+                try {
+                    const docSnap = await getDoc(userRef);
+                    if (docSnap.exists()) {
+                        setUserData(docSnap.data());
+                    } else {
+                        Alert.alert("Error", "No user data found");
+                    }
+                } catch (error) {
+                    console.error("Error fetching user data:", error);
+                    Alert.alert("Error", "Could not fetch user data");
                 }
             }
         };
 
-        fetchUserData();
+        fetchUserData().catch(console.error); // Added catch to handle any errors in the async function
     }, []);
 
     const toggleLike = (id) => {
@@ -59,7 +64,7 @@ const CustomerHomeScreen = ({ navigation }) => {
         <ScrollView style={styles.container}>
             <View style={styles.header}>
                 <Image source={require('../images/img.png')} style={styles.profilePic} />
-                <Text style={styles.welcome}>Welcome, {userData ? userData.name : 'Guest'}</Text>
+                <Text style={styles.welcome}>Welcome, {userData ? userData.name : 'User'}</Text>
                 <View style={styles.searchSection}>
                     <TextInput
                         style={styles.input}
@@ -79,7 +84,7 @@ const CustomerHomeScreen = ({ navigation }) => {
                             styles.categoryIcon,
                             activeCategory === category.id && styles.activeCategory
                         ]}
-                        onPress={() => handleSelectCategory(category.id)}
+                        onPress={() => setActiveCategory(category.id)}
                     >
                         <MaterialCommunityIcons name={category.icon} size={24} color="#4C6854" />
                         <Text>{category.title}</Text>
@@ -110,22 +115,65 @@ const CustomerHomeScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-    activeCategory: {
-        borderBottomWidth: 2,
-        borderBottomColor: '#4C6854',
+    container: {
+        flex: 1,
+        backgroundColor: '#DFF2E3',
+    },
+    header: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        backgroundColor: '#DFF2E3',
+        paddingHorizontal: 10,
+        paddingVertical: 15,
+    },
+    profilePic: {
+        width: 60,
+        height: 60,
+        borderRadius: 30,
+        borderColor: '#4C6854',
+        borderWidth: 2,
+    },
+    welcome: {
+        fontSize: 18,
+        fontWeight: 'bold',
+    },
+    searchSection: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#f0f0f0',
+        borderRadius: 20,
+        flex: 1,
+        paddingHorizontal: 10,
+        height: 40,
+        marginLeft: 10,
+    },
+    searchIcon: {
+        marginRight: 5,
+        padding: 10,
+        color: 'grey',
+    },
+    input: {
+        flex: 1,
+        paddingVertical: 5,
+        color: '#4C6854',
     },
     bellIcon: {
         marginLeft: 10,
         padding: 10,
         color: 'grey',
     },
-    bottomNav: {
+    categoryContainer: {
         flexDirection: 'row',
         justifyContent: 'space-around',
-        borderTopWidth: 1,
-        borderTopColor: '#E0E0E0',
-        backgroundColor: '#FFFFFF',
-        paddingBottom: 10,
+        marginVertical: 20,
+    },
+    categoryIcon: {
+        alignItems: 'center',
+    },
+    activeCategory: {
+        borderBottomWidth: 2,
+        borderBottomColor: '#4C6854',
     },
     card: {
         backgroundColor: '#ffffff',
@@ -145,16 +193,25 @@ const styles = StyleSheet.create({
         elevation: 2,
         marginHorizontal: 20,
     },
+    cardImage: {
+        width: 50,
+        height: 50,
+        borderRadius: 25,
+    },
     cardContent: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'flex-start',
         marginLeft: 12,
     },
-    cardImage: {
-        width: 50,
-        height: 50,
-        borderRadius: 25,
+    cardTitle: {
+        fontWeight: 'bold',
+        fontSize: 16,
+        color: '#333',
+    },
+    cardSubTitle: {
+        fontSize: 14,
+        color: 'grey',
     },
     cardPrice: {
         fontSize: 14,
@@ -164,79 +221,18 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
     },
-    cardSubTitle: {
-        fontSize: 14,
-        color: 'grey',
-    },
-    cardTitle: {
-        fontWeight: 'bold',
-        fontSize: 16,
-        color: '#333',
-    },
-    categoryContainer: {
-        flexDirection: 'row',
-        justifyContent: 'space-around',
-        marginVertical: 20,
-    },
-    categoryIcon: {
-        alignItems: 'center',
-    },
-    container: {
-        flex: 1,
-        backgroundColor: '#DFF2E3',
-    },
-    header: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        backgroundColor: '#DFF2E3',
-        paddingHorizontal: 10,
-        paddingVertical: 15,
-    },
-    input: {
-        flex: 1,
-        paddingVertical: 5,
-        color: '#4C6854',
-    },
-    navItem: {
-        alignItems: 'center',
-        padding: 5,
-    },
-    navLabel: {
-        color: '#4C6854',
-        fontSize: 12,
-    },
-    profilePic: {
-        width: 60,
-        height: 60,
-        borderRadius: 30,
-        borderColor: '#4C6854',
-        borderWidth: 2,
-    },
     ratingText: {
         fontSize: 14,
         color: '#333',
     },
-    recommended: undefined,
-    searchIcon: {
-        marginRight: 5,
-        padding: 10,
-        color: 'grey',
-    },
-    searchSection: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: '#f0f0f0',
-        borderRadius: 20,
-        flex: 1,
-        paddingHorizontal: 10,
-        height: 40,
-        marginLeft: 10,
-    }, welcome: {
+    recommended: {
         fontSize: 18,
         fontWeight: 'bold',
-    }
-
+        marginVertical: 10,
+        marginLeft: 20,
+    },
 });
 
 export default CustomerHomeScreen;
+
+

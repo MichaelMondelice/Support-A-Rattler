@@ -40,7 +40,7 @@ const CustomerSignUpScreen = ({ navigation }) => {
                 role: 'Customer'
             };
 
-            await setDoc(wdoc(db, "User", user.uid), userData);
+            await setDoc(doc(db, "User", user.uid), userData);
 
             Alert.alert("Success", "User registered successfully");
             navigation.navigate('CustomerLogin');
