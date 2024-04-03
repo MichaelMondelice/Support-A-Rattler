@@ -59,7 +59,9 @@ const AdminUserStatusScreen = () => {
             <View style={styles.userList}>
                 {userList.map((user) => (
                     <View key={user.id} style={styles.userItem}>
-                        <Text style={styles.userName}>{user.name}</Text>
+                        <Text style={styles.userName}>
+                            {user.lastName ? `${user.firstName} ${user.lastName}` : user.firstName}
+                        </Text>
                         <Text style={styles.userStatus}>{user.isActive ? 'Active' : 'Inactive'}</Text>
                         <TouchableOpacity
                             onPress={() => toggleUserStatus(user.id, user.isActive)}

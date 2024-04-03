@@ -61,7 +61,9 @@ const AdminSearchUsersScreen = () => {
                         <View style={styles.card}>
                             <Image source={item.image} style={styles.cardImage} />
                             <View style={styles.cardContent}>
-                                <Text style={styles.cardTitle}>{item.name}</Text>
+                                <Text style={styles.cardTitle}>
+                                    {item.lastName ? `${item.firstName} ${item.lastName}` : item.firstName}
+                                </Text>
                                 <Text style={styles.cardSubTitle}>{item.email}</Text>
                                 {/* Additional user details */}
                             </View>

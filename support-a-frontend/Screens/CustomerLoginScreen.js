@@ -33,7 +33,11 @@ const CustomerLoginScreen = ({ navigation }) => {
 
             if (docSnap.exists()) {
                 const userData = docSnap.data();
-                navigation.navigate('CustomerHome', { userData });
+                if (userData.isActive) {
+                    navigation.navigate('CustomerHome', { userData });
+                } else {
+                    setErrorMessage("Locked account, contact admin @ FAMU@famu.edu ");
+                }
             } else {
                 Alert.alert("Error", "No user data found");
             }

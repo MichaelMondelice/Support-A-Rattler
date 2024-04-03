@@ -1,25 +1,48 @@
 import React, { useState } from 'react';
 import { TextInput, TouchableOpacity, Text, KeyboardAvoidingView, StyleSheet, Alert } from 'react-native';
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
+import { db } from '../firebase';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 
 const EntrepreneurLoginScreen = ({ navigation }) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [errorMessage, setErrorMessage] = useState('');
 
     const handleLogin = async () => {
         if (!email || !password) {
-            Alert.alert("Error", "Please enter both email and password");
+            setErrorMessage("Please enter both email and password");
             return;
         }
 
-        const auth = getAuth();
         try {
-            const userCredential = await signInWithEmailAndPassword(auth, email, password);
-            // If successful, navigate to EntrepreneurHome
-            navigation.navigate('EntrepreneurHome', { userData: userCredential.user });
+            // Check if the email exists in the database
+            const usersRef = collection(db, 'User');
+            const q = query(usersRef, where("email", "==", email));
+            const querySnapshot = await getDocs(q);
+
+            if (!querySnapshot.empty) {
+                // Email exists, check password and isActive status
+                const userData = querySnapshot.docs[0].data();
+                if (userData.password === password) {
+                    if (userData.isActive) {
+                        // Password matches and account is active, proceed with login
+                        const auth = getAuth();
+                        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                        navigation.navigate('EntrepreneurHome', { userData: userCredential.user });
+                    } else {
+                        // Account is inactive, display error message
+                        setErrorMessage("Locked account, contact admin @ FAMU@famu.edu");
+                    }
+                } else {
+                    setErrorMessage("Incorrect password");
+                }
+            } else {
+                setErrorMessage("Invalid email");
+            }
         } catch (error) {
             console.error("Login error: ", error);
-            Alert.alert("Login Error", error.message);
+            setErrorMessage("Error logging in");
         }
     };
 
@@ -47,6 +70,7 @@ const EntrepreneurLoginScreen = ({ navigation }) => {
             <TouchableOpacity onPress={() => navigation.navigate('EntrepreneurSignUp')}>
                 <Text style={styles.signUpText}>Don't have an account? Sign Up</Text>
             </TouchableOpacity>
+            {errorMessage ? <Text style={styles.errorMessage}>{errorMessage}</Text> : null}
         </KeyboardAvoidingView>
     );
 };
@@ -84,7 +108,10 @@ const styles = StyleSheet.create({
         marginTop: 20,
         color: '#4C6854',
     },
+    errorMessage: {
+        color: 'red',
+        marginTop: 10,
+    },
 });
 
 export default EntrepreneurLoginScreen;
-
