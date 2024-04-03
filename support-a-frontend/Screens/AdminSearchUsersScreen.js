@@ -81,9 +81,13 @@ const AdminSearchUsersScreen = () => {
             >
                 <View style={styles.modal}>
                     <Text>User Details</Text>
-                    {selectedUser && Object.entries(selectedUser).map(([key, value]) => (
-                        <Text key={key}>{key}: {value}</Text>
-                    ))}
+                    {selectedUser && (
+                        <>
+                            {Object.entries(selectedUser).map(([key, value]) => (
+                                <Text key={key}>{key}: {key === 'isActive' ? (value ? 'True' : 'False') : value}</Text>
+                            ))}
+                        </>
+                    )}
                     <Button title="Close" onPress={() => setModalVisible(false)} />
                 </View>
             </Modal>
