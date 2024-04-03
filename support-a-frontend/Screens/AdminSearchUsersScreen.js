@@ -1,16 +1,38 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, Button, FlatList, StyleSheet } from 'react-native';
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from '../firebase'; // Import your Firestore instance
 
 const AdminSearchUsersScreen = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState([]);
 
+    useEffect(() => {
+        // Function to fetch users from Firebase Cloud Firestore
+        const fetchUser = async () => {
+            try {
+                const querySnapshot = await getDocs(collection(db, 'User'));
+                const fetchedUser = [];
+                querySnapshot.forEach((doc) => {
+                    fetchedUser.push({ id: doc.id, ...doc.data() });
+                });
+                setSearchResults(fetchedUser);
+            } catch (error) {
+                console.error('Error fetching users:', error);
+            }
+        };
+
+        // Call fetchUsers when the component mounts
+        fetchUser();
+    }, []); // Empty dependency array to ensure this effect runs only once
+
     // Function to handle search action
     const handleSearch = () => {
-        // Here you would implement the logic to search users based on the searchQuery
-        // For demonstration, let's assume searchResults is fetched from Firebase
-        const fetchedResults = []; // Fetch results from Firebase or any other source
-        setSearchResults(fetchedResults);
+        // Filter search results based on the searchQuery
+        const filteredResults = searchResults.filter(user =>
+            user.name.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+        setSearchResults(filteredResults);
     };
 
     return (
@@ -33,7 +55,7 @@ const AdminSearchUsersScreen = () => {
                         {/* Additional user details */}
                     </View>
                 )}
-                keyExtractor={(item) => item.id.toString()} // Assuming each user has an ID
+                keyExtractor={(item) => item.id}
                 style={styles.userList}
             />
         </View>

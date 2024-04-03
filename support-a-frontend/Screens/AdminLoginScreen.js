@@ -10,29 +10,20 @@ const AdminLoginScreen = ({ navigation }) => {
     const [errorMessage, setErrorMessage] = useState('');
 
     const handleLogin = async () => {
-        if (!email || !password) {
-            setErrorMessage("Please enter both email and password");
+        const adminEmail = 'FAMU@famu.edu';
+        const adminPassword = 'famu123';
+
+        if (email !== adminEmail || password !== adminPassword) {
+            setErrorMessage("Invalid email or password");
             return;
         }
 
-        const auth = getAuth();
         try {
-            const userCredential = await signInWithEmailAndPassword(auth, email, password);
-            const user = userCredential.user;
-
-            const userRef = doc(db, "User", user.uid);
-            const docSnap = await getDoc(userRef);
-
-            if (docSnap.exists()) {
-                const userData = docSnap.data();
-                navigation.navigate('AdminHome', { userData });
-            } else {
-                setErrorMessage("No user data found");
-            }
+            // You can skip actual authentication if hardcoded email/password matches
+            navigation.navigate('AdminHome');
         } catch (error) {
             console.error("Login error: ", error);
-            Alert.alert("Login Error", error.message);
-            setErrorMessage(error.message);
+            setErrorMessage("Error logging in");
         }
     };
 
@@ -63,6 +54,7 @@ const AdminLoginScreen = ({ navigation }) => {
         </KeyboardAvoidingView>
     );
 };
+
 
 const styles = StyleSheet.create({
     container: {
