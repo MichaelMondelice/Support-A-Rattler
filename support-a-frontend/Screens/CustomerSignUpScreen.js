@@ -37,7 +37,8 @@ const CustomerSignUpScreen = ({ navigation }) => {
                 email,
                 dateOfBirth,
                 gender,
-                role: 'Customer'
+                role: 'Customer',
+                isActive: true // Set isActive to true by default
             };
 
             await setDoc(doc(db, "User", user.uid), userData);
