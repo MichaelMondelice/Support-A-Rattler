@@ -9,49 +9,67 @@ import {
 } from 'react-native';
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
-import { db } from "../firebase"; // Use the imported db directly
+import { db } from "../firebase";
 
 const EntrepreneurLoginScreen = ({ navigation }) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [errorMessage, setErrorMessage] = useState('');
 
     const handleLogin = async () => {
         if (!email || !password) {
-            Alert.alert("Error", "Please enter both email and password");
+            setErrorMessage("Please enter both email and password");
             return;
         }
 
-        const auth = getAuth();
         try {
+            const auth = getAuth();
             const userCredential = await signInWithEmailAndPassword(auth, email, password);
             const user = userCredential.user;
 
-            const userRef = doc(db, "User", user.uid); // Ensure the collection name matches the one used in the Firestore
+            const userRef = doc(db, "User", user.uid); // Ensure the collection name matches the one used in Firestore
             const docSnap = await getDoc(userRef);
 
             if (docSnap.exists()) {
                 const userData = docSnap.data();
-                navigation.navigate('EntrepreneurHome', { userData });
+                if (userData.isActive) {
+                    navigation.navigate('EntrepreneurHome', { userData });
+                } else {
+                    setErrorMessage("Account is inactive, please contact support.");
+                }
             } else {
-                Alert.alert("Error", "No user data found");
+                setErrorMessage("No user data found");
             }
         } catch (error) {
             console.error("Login error: ", error);
-            Alert.alert("Login Error", error.message);
+            setErrorMessage(error.message);
         }
     };
 
     return (
         <KeyboardAvoidingView style={styles.container} behavior="padding">
             <Text style={styles.header}>Entrepreneur Sign In</Text>
-            <TextInput style={styles.input} placeholder="Email" value={email} onChangeText={setEmail} autoCapitalize="none" />
-            <TextInput style={styles.input} placeholder="Password" value={password} onChangeText={setPassword} secureTextEntry />
+            <TextInput
+                style={styles.input}
+                placeholder="Email"
+                value={email}
+                onChangeText={setEmail}
+                autoCapitalize="none"
+            />
+            <TextInput
+                style={styles.input}
+                placeholder="Password"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry
+            />
             <TouchableOpacity style={styles.button} onPress={handleLogin}>
                 <Text style={styles.buttonText}>Sign In</Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={() => navigation.navigate('EntrepreneurSignUp')}>
                 <Text style={styles.signUpText}>Don't have an account? Sign Up</Text>
             </TouchableOpacity>
+            {errorMessage ? <Text style={styles.errorMessage}>{errorMessage}</Text> : null}
         </KeyboardAvoidingView>
     );
 };
@@ -89,7 +107,10 @@ const styles = StyleSheet.create({
         marginTop: 20,
         color: '#4C6854',
     },
+    errorMessage: {
+        color: 'red',
+        marginTop: 10,
+    },
 });
 
 export default EntrepreneurLoginScreen;
-

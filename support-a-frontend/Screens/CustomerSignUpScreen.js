@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
-import { db } from "../firebase"; // Use the imported db
+import { db } from "../firebase";
 
 const CustomerSignUpScreen = ({ navigation }) => {
     const [firstName, setFirstName] = useState('');
@@ -35,9 +35,11 @@ const CustomerSignUpScreen = ({ navigation }) => {
                 firstName,
                 lastName,
                 email,
+                password, // Storing the password in Firestore, which is not recommended for security reasons
                 dateOfBirth,
                 gender,
-                role: 'Customer'
+                role: 'Customer',
+                isActive: true
             };
 
             await setDoc(doc(db, "User", user.uid), userData);
@@ -102,7 +104,7 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         fontSize: 18,
     },
-    // Add any additional styles you need here
+    // Additional styles as needed
 });
 
 export default CustomerSignUpScreen;

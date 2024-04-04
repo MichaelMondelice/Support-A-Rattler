@@ -1,30 +1,54 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Image } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { collection, getDocs, doc, updateDoc } from 'firebase/firestore';
+import { auth } from '../firebase'; // Import Firebase Authentication
+import { db } from '../firebase';
 
-// Dummy data for user
-const users = [
-    { id: '1', name: 'John Doe', status: 'Active' },
-    { id: '2', name: 'Jane Smith', status: 'Inactive' },
-    { id: '3', name: 'Michael Johnson', status: 'Active' },
-    { id: '4', name: 'Emily Davis', status: 'Inactive' },
-    { id: '5', name: 'David Wilson', status: 'Active' },
-];
+const AdminUserStatusScreen = () => {
+    const [userList, setUserList] = useState([]);
 
-const AdminHomeScreen = () => {
-    const [userList, setUserList] = useState(users);
-
-    // Function to toggle user status (activate/deactivate)
-    const toggleUserStatus = (id) => {
-        setUserList(userList.map(user => {
-            if (user.id === id) {
-                // Toggle status and update button text
-                const newStatus = user.status === 'Active' ? 'Inactive' : 'Active';
-                return { ...user, status: newStatus };
+    useEffect(() => {
+        const fetchUsers = async () => {
+            try {
+                const querySnapshot = await getDocs(collection(db, 'User'));
+                const fetchedUsers = [];
+                querySnapshot.forEach((doc) => {
+                    fetchedUsers.push({ id: doc.id, ...doc.data() });
+                });
+                setUserList(fetchedUsers);
+            } catch (error) {
+                console.error('Error fetching users:', error);
             }
-            return user;
-        }));
+        };
+
+        fetchUsers();
+    }, []);
+
+    const toggleUserStatus = async (id, isActive) => {
+        try {
+            // Update Firestore document
+            const userRef = doc(db, 'User', id);
+            await updateDoc(userRef, { isActive: !isActive });
+
+            // Update local state to reflect the change immediately
+            setUserList(prevUserList =>
+                prevUserList.map(user => {
+                    if (user.id === id) {
+                        return { ...user, isActive: !isActive };
+                    } else {
+                        return user;
+                    }
+                })
+            );
+
+            // Update Firebase Authentication
+            // (Add your authentication logic here if needed)
+
+        } catch (error) {
+            console.error('Error toggling user status:', error);
+        }
     };
+
 
     return (
         <ScrollView contentContainerStyle={styles.container}>
@@ -35,16 +59,18 @@ const AdminHomeScreen = () => {
             <View style={styles.userList}>
                 {userList.map((user) => (
                     <View key={user.id} style={styles.userItem}>
-                        <Text style={styles.userName}>{user.name}</Text>
-                        <Text style={styles.userStatus}>{user.status}</Text>
+                        <Text style={styles.userName}>
+                            {user.lastName ? `${user.firstName} ${user.lastName}` : user.firstName}
+                        </Text>
+                        <Text style={styles.userStatus}>{user.isActive ? 'Active' : 'Inactive'}</Text>
                         <TouchableOpacity
-                            onPress={() => toggleUserStatus(user.id)}
+                            onPress={() => toggleUserStatus(user.id, user.isActive)}
                             style={[
                                 styles.toggleButton,
-                                { backgroundColor: user.status === 'Active' ? '#4CAF50' : '#F44336' }
+                                { backgroundColor: user.isActive ? '#4CAF50' : '#F44336' }
                             ]}
                         >
-                            <Text style={styles.buttonText}>{user.status === 'Active' ? 'Deactivate' : 'Activate'}</Text>
+                            <Text style={styles.buttonText}>{user.isActive ? 'Deactivate' : 'Activate'}</Text>
                         </TouchableOpacity>
                     </View>
                 ))}
@@ -111,4 +137,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default AdminHomeScreen;
+export default AdminUserStatusScreen;
