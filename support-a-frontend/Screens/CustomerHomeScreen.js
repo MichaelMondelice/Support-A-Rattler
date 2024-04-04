@@ -23,7 +23,7 @@ const categories = [
     { id: 'food', title: 'Food', icon: 'food' }
 ];
 
-const CustomerHomeScreen = () => { // Removed unused navigation parameter
+const CustomerHomeScreen = ({ navigation }) => {
     const [userData, setUserData] = useState(null);
     const [services, setServices] = useState(initialServices);
     const [activeCategory, setActiveCategory] = useState(null);
@@ -34,21 +34,16 @@ const CustomerHomeScreen = () => { // Removed unused navigation parameter
             const user = auth.currentUser;
             if (user) {
                 const userRef = doc(db, "User", user.uid);
-                try {
-                    const docSnap = await getDoc(userRef);
-                    if (docSnap.exists()) {
-                        setUserData(docSnap.data());
-                    } else {
-                        Alert.alert("Error", "No user data found");
-                    }
-                } catch (error) {
-                    console.error("Error fetching user data:", error);
-                    Alert.alert("Error", "Could not fetch user data");
+                const docSnap = await getDoc(userRef);
+                if (docSnap.exists()) {
+                    setUserData(docSnap.data());
+                } else {
+                    Alert.alert("Error", "No user data found");
                 }
             }
         };
 
-        fetchUserData().catch(console.error); // Added catch to handle any errors in the async function
+        fetchUserData().catch(console.error);
     }, []);
 
     const toggleLike = (id) => {
@@ -65,15 +60,9 @@ const CustomerHomeScreen = () => { // Removed unused navigation parameter
             <View style={styles.header}>
                 <Image source={require('../images/img.png')} style={styles.profilePic} />
                 <Text style={styles.welcome}>Welcome, {userData ? userData.name : 'User'}</Text>
-                <View style={styles.searchSection}>
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Search"
-                        placeholderTextColor="#666"
-                    />
-                    <MaterialCommunityIcons name="magnify" size={24} color="#4C6854" style={styles.searchIcon} />
-                    <FontAwesome name="bell-o" size={24} color="black" style={styles.bellIcon} />
-                </View>
+                <TouchableOpacity onPress={() => navigation.navigate('SettingsScreen')}>
+                    <MaterialCommunityIcons name="settings" size={24} color="#4C6854" />
+                </TouchableOpacity>
             </View>
             {/* Category Section */}
             <View style={styles.categoryContainer}>
@@ -234,5 +223,3 @@ const styles = StyleSheet.create({
 });
 
 export default CustomerHomeScreen;
-
-
