@@ -15,6 +15,8 @@ import AdminUserStatusScreen from "./Screens/AdminUserStatusScreen";
 import AdminReportsScreen from "./Screens/AdminReportsScreen";
 import AdminMessagesScreen from "./Screens/AdminMessagesScreen"; // Import AdminSearchUsersScreen
 
+import OrdersScreen from './Screens/OrdersScreen';
+
 import SettingsScreen from './Screens/SettingsScreen';
 
 
@@ -38,6 +40,8 @@ export default function App() {
                 <Stack.Screen name="EntrepreneurHome" component={EntrepreneurHomeScreen} options={{ title: 'Entrepreneur Home' }} />
                 <Stack.Screen name="EntrepreneurSignUp" component={EntrepreneurSignUpScreen} options={{ title: 'Entrepreneur Sign Up' }} />
                 <Stack.Screen name="SettingsScreen" component={SettingsScreen} options={{ title: 'SettingsScreen' }} />
+                <Stack.Screen name="OrdersScreen" component={OrdersScreen} options={{ title: 'OrdersScreen' }} />
+
 
             </Stack.Navigator>
         </NavigationContainer>

@@ -69,6 +69,13 @@ const EntrepreneurHomeScreen = ({ navigation }) => {
                 <TouchableOpacity style={styles.sidebarItem} onPress={() => navigation.navigate('Messages')}>
                     <Text style={styles.sidebarText}>Messages</Text>
                 </TouchableOpacity>
+                <Image source={require('../images/logo.png')} style={styles.logo} />
+                <TouchableOpacity style={styles.sidebarItem} onPress={() => navigation.navigate('Home')}>
+                    <Text style={styles.sidebarText}>Home</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.sidebarItem} onPress={() => navigation.navigate('OrdersScreen')}>
+                    <Text style={styles.sidebarText}>Orders</Text>
+                </TouchableOpacity>
                 <TouchableOpacity
                     style={styles.sidebarItem}
                     onPress={() => navigation.navigate('SettingsScreen')}
