@@ -1,6 +1,15 @@
 import React, { useState } from 'react';
-import { TextInput, TouchableOpacity, Text, KeyboardAvoidingView, StyleSheet, Alert } from 'react-native';
+import {
+    TextInput,
+    TouchableOpacity,
+    Text,
+    KeyboardAvoidingView,
+    StyleSheet,
+    Alert
+} from 'react-native';
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "../firebase"; // Use the imported db directly
 
 const EntrepreneurLoginScreen = ({ navigation }) => {
     const [email, setEmail] = useState('');
@@ -15,8 +24,17 @@ const EntrepreneurLoginScreen = ({ navigation }) => {
         const auth = getAuth();
         try {
             const userCredential = await signInWithEmailAndPassword(auth, email, password);
-            // If successful, navigate to EntrepreneurHome
-            navigation.navigate('EntrepreneurHome', { userData: userCredential.user });
+            const user = userCredential.user;
+
+            const userRef = doc(db, "User", user.uid); // Ensure the collection name matches the one used in the Firestore
+            const docSnap = await getDoc(userRef);
+
+            if (docSnap.exists()) {
+                const userData = docSnap.data();
+                navigation.navigate('EntrepreneurHome', { userData });
+            } else {
+                Alert.alert("Error", "No user data found");
+            }
         } catch (error) {
             console.error("Login error: ", error);
             Alert.alert("Login Error", error.message);
@@ -26,21 +44,8 @@ const EntrepreneurLoginScreen = ({ navigation }) => {
     return (
         <KeyboardAvoidingView style={styles.container} behavior="padding">
             <Text style={styles.header}>Entrepreneur Sign In</Text>
-            <TextInput
-                style={styles.input}
-                placeholder="Email"
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                autoCapitalize="none"
-            />
-            <TextInput
-                style={styles.input}
-                placeholder="Password"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-            />
+            <TextInput style={styles.input} placeholder="Email" value={email} onChangeText={setEmail} autoCapitalize="none" />
+            <TextInput style={styles.input} placeholder="Password" value={password} onChangeText={setPassword} secureTextEntry />
             <TouchableOpacity style={styles.button} onPress={handleLogin}>
                 <Text style={styles.buttonText}>Sign In</Text>
             </TouchableOpacity>
