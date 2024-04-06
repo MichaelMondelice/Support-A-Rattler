@@ -1,29 +1,45 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Image } from 'react-native';
-
-// Dummy data for users
-const users = [
-    { id: '1', name: 'John Doe', orders: 10, deliveries: 5, type: 'product' },
-    { id: '2', name: 'Jane Smith', orders: 15, deliveries: 8, type: 'service' },
-    { id: '3', name: 'Michael Johnson', orders: 20, deliveries: 12, type: 'product' },
-    { id: '4', name: 'Emily Davis', orders: 8, deliveries: 3, type: 'service' },
-    { id: '5', name: 'David Wilson', orders: 12, deliveries: 7, type: 'product' },
-];
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from '../firebase'; // Import your Firestore instance
 
 const AdminReportsScreen = () => {
-    const [userList, setUserList] = useState(users);
+    const [productsServicesList, setProductsServicesList] = useState([]);
+    const [filteredProductsServicesList, setFilteredProductsServicesList] = useState([]);
     const [filter, setFilter] = useState('all'); // Default filter option
+
+    useEffect(() => {
+        const fetchProductsServices = async () => {
+            try {
+                const querySnapshot = await getDocs(collection(db, 'ProductService'));
+                const data = [];
+                querySnapshot.forEach((doc) => {
+                    data.push({ id: doc.id, ...doc.data() });
+                });
+                setProductsServicesList(data);
+                setFilteredProductsServicesList(data);
+            } catch (error) {
+                console.error('Error fetching products and services:', error);
+            }
+        };
+
+        fetchProductsServices();
+    }, []);
 
     // Function to handle applying filter
     const applyFilter = (type) => {
         setFilter(type);
-        if (type === 'all') {
-            setUserList(users); // Reset to all users
-        } else {
-            const filteredUsers = users.filter(user => user.type === type);
-            setUserList(filteredUsers);
+        if (type === 'Product') {
+            const filteredList = productsServicesList.filter(item => item.type === 'Product');
+            setFilteredProductsServicesList(filteredList);
+        } else if (type === 'Service') {
+            const filteredList = productsServicesList.filter(item => item.type === 'Service');
+            setFilteredProductsServicesList(filteredList);
+        } else { // If type is 'all' or any other unexpected value
+            setFilteredProductsServicesList(productsServicesList); // Reset to all products and services
         }
     };
+
 
     return (
         <ScrollView contentContainerStyle={styles.container}>
@@ -32,10 +48,10 @@ const AdminReportsScreen = () => {
                 <Text style={styles.title}>Admin Reports</Text>
             </View>
             <View style={styles.filterContainer}>
-                <TouchableOpacity onPress={() => applyFilter('product')} style={styles.filterButton}>
+                <TouchableOpacity onPress={() => applyFilter('Product')} style={styles.filterButton}>
                     <Text style={styles.filterButtonText}>Product</Text>
                 </TouchableOpacity>
-                <TouchableOpacity onPress={() => applyFilter('service')} style={styles.filterButton}>
+                <TouchableOpacity onPress={() => applyFilter('Service')} style={styles.filterButton}>
                     <Text style={styles.filterButtonText}>Service</Text>
                 </TouchableOpacity>
                 <TouchableOpacity onPress={() => applyFilter('all')} style={styles.filterButton}>
@@ -43,15 +59,15 @@ const AdminReportsScreen = () => {
                 </TouchableOpacity>
             </View>
             <View style={styles.userList}>
-                {userList.map((user) => (
-                    <View key={user.id} style={styles.userItem}>
-                        <Text style={styles.userName}>{user.name}</Text>
+                {filteredProductsServicesList.map((item) => (
+                    <View key={item.id} style={styles.userItem}>
+                        <Text style={styles.userName}>{item.name}</Text>
                         <View style={styles.buttonsContainer}>
                             <TouchableOpacity style={styles.button}>
-                                <Text style={styles.buttonText}>{user.orders} Orders</Text>
+                                <Text style={styles.buttonText}>{item.orders} Orders</Text>
                             </TouchableOpacity>
                             <TouchableOpacity style={styles.button}>
-                                <Text style={styles.buttonText}>{user.deliveries} Deliveries</Text>
+                                <Text style={styles.buttonText}>{item.deliveries} Deliveries</Text>
                             </TouchableOpacity>
                         </View>
                     </View>
