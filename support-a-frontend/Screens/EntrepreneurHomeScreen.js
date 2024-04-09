@@ -1,3 +1,4 @@
+//EntrepreneurHomeScreen.js
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Image, StyleSheet, ScrollView, Dimensions } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -62,6 +63,9 @@ const EntrepreneurHomeScreen = ({ navigation }) => {
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.sidebarItem} onPress={() => navigation.navigate('Orders')}>
                     <Text style={styles.sidebarText}>Orders</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.sidebarItem} onPress={() => navigation.navigate('ServicesProducts')}>
+                    <Text style={styles.sidebarText}>Services/Products</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.sidebarItem} onPress={() => navigation.navigate('Analytics')}>
                     <Text style={styles.sidebarText}>Analytics</Text>
