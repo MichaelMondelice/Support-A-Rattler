@@ -13,11 +13,16 @@ import EntrepreneurSignUpScreen from './Screens/EntrepreneurSignUpScreen';
 import AdminSearchUsersScreen from './Screens/AdminSearchUsersScreen';
 import AdminUserStatusScreen from "./Screens/AdminUserStatusScreen";
 import AdminReportsScreen from "./Screens/AdminReportsScreen";
-import AdminMessagesScreen from "./Screens/AdminMessagesScreen"; // Import AdminSearchUsersScreen
-
+import AdminMessagesScreen from "./Screens/AdminMessagesScreen";
+import ServicesProductsScreen from "./Screens/ServicesProductsScreen";
 import OrdersScreen from './Screens/OrdersScreen';
-
 import SettingsScreen from './Screens/SettingsScreen';
+import ServicesScreen from "./Screens/ServicesScreen";
+import ProductsScreen from "./Screens/ProductsScreen";
+
+// Import AdminSearchUsersScreen
+
+
 
 
 const Stack = createNativeStackNavigator();
@@ -41,7 +46,9 @@ export default function App() {
                 <Stack.Screen name="EntrepreneurSignUp" component={EntrepreneurSignUpScreen} options={{ title: 'Entrepreneur Sign Up' }} />
                 <Stack.Screen name="SettingsScreen" component={SettingsScreen} options={{ title: 'SettingsScreen' }} />
                 <Stack.Screen name="OrdersScreen" component={OrdersScreen} options={{ title: 'OrdersScreen' }} />
-
+                <Stack.Screen name="ServicesProducts" component={ServicesProductsScreen} options={{ title: 'Services/Products' }} />
+                <Stack.Screen name="ServicesScreen" component={ServicesScreen} options={{title: 'ServicesScreen'}} />
+                <Stack.Screen name="ProductsScreen" component={ProductsScreen} options={{title: 'ProductsScreen'}} />
 
             </Stack.Navigator>
         </NavigationContainer>
