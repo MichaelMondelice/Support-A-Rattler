@@ -61,7 +61,7 @@ const EntrepreneurHomeScreen = ({ navigation }) => {
                 <TouchableOpacity style={styles.sidebarItem} onPress={() => navigation.navigate('Home')}>
                     <Text style={styles.sidebarText}>Home</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.sidebarItem} onPress={() => navigation.navigate('Orders')}>
+                <TouchableOpacity style={styles.sidebarItem} onPress={() => navigation.navigate('OrdersScreen')}>
                     <Text style={styles.sidebarText}>Orders</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.sidebarItem} onPress={() => navigation.navigate('ServicesProducts')}>
@@ -73,13 +73,6 @@ const EntrepreneurHomeScreen = ({ navigation }) => {
                 <TouchableOpacity style={styles.sidebarItem} onPress={() => navigation.navigate('Messages')}>
                     <Text style={styles.sidebarText}>Messages</Text>
                 </TouchableOpacity>
-                <Image source={require('../images/logo.png')} style={styles.logo} />
-                <TouchableOpacity style={styles.sidebarItem} onPress={() => navigation.navigate('Home')}>
-                    <Text style={styles.sidebarText}>Home</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.sidebarItem} onPress={() => navigation.navigate('OrdersScreen')}>
-                    <Text style={styles.sidebarText}>Orders</Text>
-                </TouchableOpacity>
                 <TouchableOpacity
                     style={styles.sidebarItem}
                     onPress={() => navigation.navigate('SettingsScreen')}
@@ -87,6 +80,7 @@ const EntrepreneurHomeScreen = ({ navigation }) => {
                     <MaterialIcons name="settings" size={24} color="#4C6854" />
                     <Text style={styles.sidebarText}>Settings</Text>
                 </TouchableOpacity>
+
             </View>
             <ScrollView style={styles.mainContent}>
                 <TextInput style={styles.searchBar} placeholder="Search...." placeholderTextColor="#666" />
