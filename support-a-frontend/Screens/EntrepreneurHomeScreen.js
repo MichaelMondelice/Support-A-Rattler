@@ -80,6 +80,7 @@ const EntrepreneurHomeScreen = ({ navigation }) => {
                     <MaterialIcons name="settings" size={24} color="#4C6854" />
                     <Text style={styles.sidebarText}>Settings</Text>
                 </TouchableOpacity>
+
             </View>
             <ScrollView style={styles.mainContent}>
                 <TextInput style={styles.searchBar} placeholder="Search...." placeholderTextColor="#666" />

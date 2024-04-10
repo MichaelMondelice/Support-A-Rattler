@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { View, TouchableOpacity, Text, Image, StyleSheet, ScrollView, Alert, FlatList } from 'react-native';
+import { View, TouchableOpacity, Text, Image, StyleSheet, ScrollView, Alert, FlatList, TextInput } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { collection, getDocs, doc, getDoc } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import { db } from "../firebase";
 
-const CustomerHomeScreen = ({ navigation }) => {
+const CustomerSearchScreen = ({ navigation }) => {
     const [userData, setUserData] = useState(null);
     const [services, setServices] = useState([]);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [filteredServices, setFilteredServices] = useState([]);
 
     const categoryIcons = {
         'Health': 'heart',
@@ -53,6 +55,19 @@ const CustomerHomeScreen = ({ navigation }) => {
         fetchServices();
     }, []);
 
+    useEffect(() => {
+        if (searchQuery.trim() !== '') {
+            const queryLowerCase = searchQuery.toLowerCase();
+            const filtered = services.filter(service =>
+                service.businessName.toLowerCase().includes(queryLowerCase) ||
+                service.category.toLowerCase().includes(queryLowerCase)
+            );
+            setFilteredServices(filtered);
+        } else {
+            setFilteredServices(services);
+        }
+    }, [searchQuery, services]);
+
     const handleServiceClick = (service) => {
         navigation.navigate('BookingScreen', { service });
     };
@@ -63,11 +78,20 @@ const CustomerHomeScreen = ({ navigation }) => {
                 <View style={styles.header}>
                     <Image source={require('../images/img.png')} style={styles.profilePic} />
                     <Text style={styles.welcome}>Welcome, {userData ? userData.name : 'User'}</Text>
+                    <TouchableOpacity onPress={() => navigation.navigate('SettingsScreen')}>
+                        <MaterialCommunityIcons name="settings" size={24} color="#4C6854" />
+                    </TouchableOpacity>
                 </View>
 
+                <TextInput
+                    placeholder="Search services..."
+                    value={searchQuery}
+                    onChangeText={setSearchQuery}
+                    style={styles.searchInput}
+                />
                 <Text style={styles.recommendedTitle}>Recommended</Text>
                 <FlatList
-                    data={services}
+                    data={filteredServices}
                     keyExtractor={item => item.id}
                     renderItem={({ item }) => (
                         <TouchableOpacity style={styles.serviceItem} onPress={() => handleServiceClick(item)}>
@@ -86,7 +110,6 @@ const CustomerHomeScreen = ({ navigation }) => {
                         </TouchableOpacity>
                     )}
                 />
-                {/* Place other content you want to display on the home screen here */}
             </ScrollView>
             <View style={styles.tabBarContainer}>
                 <TouchableOpacity style={styles.tabItem} onPress={() => navigation.navigate('CustomerHome')}>
@@ -138,9 +161,8 @@ const styles = StyleSheet.create({
         borderWidth: 2,
     },
     welcome: {
-        fontSize: 24,
+        fontSize: 18,
         fontWeight: 'bold',
-        textAlign: 'center',
     },
     tabBarContainer: {
         flexDirection: 'row',
@@ -189,7 +211,15 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: '#555',
     },
+    searchInput: {
+        backgroundColor: '#C8E6C9',
+        padding: 10,
+        marginHorizontal: 10,
+        marginTop: 10,
+        marginBottom: 20,
+        borderRadius: 6,
+    },
 
 });
 
-export default CustomerHomeScreen;
+export default CustomerSearchScreen;
