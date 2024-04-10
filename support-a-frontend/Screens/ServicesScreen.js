@@ -6,25 +6,34 @@ import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc } from "firebase
 const ServicesScreen = () => {
     const [selectedTab, setSelectedTab] = useState('CreateWorkSchedule');
     const [services, setServices] = useState([]);
-    const [editingId, setEditingId] = useState(null); // To track which service is being edited
-    const [editableService, setEditableService] = useState({}); // To temporarily store editable service data
+    const [editingId, setEditingId] = useState(null);
+    const [editableService, setEditableService] = useState({});
     const [businessName, setBusinessName] = useState('');
+    const [category, setCategory] = useState(''); // New state for category
     const [workingDays, setWorkingDays] = useState('');
     const [startTime, setStartTime] = useState('');
     const [endTime, setEndTime] = useState('');
+    const [interval, setInterval] = useState('');
+
 
     useEffect(() => {
         const fetchServices = async () => {
             try {
+                const user = auth.currentUser;
+                if (!user) {
+                    Alert.alert("Error", "You must be signed in to view services.");
+                    return;
+                }
                 const querySnapshot = await getDocs(collection(db, "Services"));
-                const servicesList = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                const servicesList = querySnapshot.docs
+                    .map(doc => ({ id: doc.id, ...doc.data() }))
+                    .filter(service => service.userId === user.uid); // Filter services by the current user's ID
                 setServices(servicesList);
             } catch (error) {
                 console.error("Error fetching services: ", error);
                 Alert.alert("Error", "Failed to fetch services.");
             }
         };
-
         fetchServices();
     }, []);
 
@@ -49,39 +58,49 @@ const ServicesScreen = () => {
             return false;
         }
 
+        // Validate Appointment Interval
+        const intervalOptions = [30, 60, 90, 120]; // Allowed intervals in minutes
+        const parsedInterval = parseInt(interval, 10); // Parse the interval to a number
+        if (!intervalOptions.includes(parsedInterval)) {
+            Alert.alert("Validation Error", "Appointment interval must be 30, 60, 90, or 120 minutes.");
+            return false;
+        }
+
         return true;
     };
 
-    const handleAddService = async () => {
-        if (!validateInputs()) {
-            return;
-        }
 
+    const handleAddService = async () => {
         const user = auth.currentUser;
         if (!user) {
             Alert.alert("Error", "You must be signed in to add a service.");
             return;
         }
-
         try {
             const docRef = await addDoc(collection(db, "Services"), {
-                userId: user.uid, // Ensure you include the user ID in your service documents
+                userId: user.uid,
                 businessName,
+                category, // Include category in the added service
                 workingDays,
                 startTime,
                 endTime,
+                interval,
+
             });
             console.log("Document written with ID: ", docRef.id);
             Alert.alert("Success", "Service added successfully!");
+            // Clear all fields after successful addition
             setBusinessName('');
+            setCategory('');
             setWorkingDays('');
             setStartTime('');
             setEndTime('');
+            setInterval('');
+
         } catch (error) {
             console.error("Error adding service: ", error);
             Alert.alert("Error", "Failed to add service.");
         }
-
     };
 
     const handleUpdateService = async (id) => {
@@ -91,7 +110,6 @@ const ServicesScreen = () => {
             Alert.alert("Success", "Service updated successfully!");
             setEditableService({});
             setEditingId(null);
-            // Refresh the services list to reflect the update
             const updatedServices = services.map(service => service.id === id ? { ...service, ...editableService } : service);
             setServices(updatedServices);
         } catch (error) {
@@ -104,7 +122,6 @@ const ServicesScreen = () => {
         try {
             await deleteDoc(doc(db, "Services", id));
             Alert.alert("Success", "Service deleted successfully!");
-            // Remove the service from the list
             const filteredServices = services.filter(service => service.id !== id);
             setServices(filteredServices);
         } catch (error) {
@@ -139,9 +156,11 @@ const ServicesScreen = () => {
             {selectedTab === 'CreateWorkSchedule' && (
                 <View>
                     <TextInput placeholder="Business Name" value={businessName} onChangeText={setBusinessName} style={styles.input} />
+                    <TextInput placeholder="Category (e.g., Hair, Nails, Barber)" value={category} onChangeText={setCategory} style={styles.input} />
                     <TextInput placeholder="Working Days (e.g., Mon, Wed, Fri)" value={workingDays} onChangeText={setWorkingDays} style={styles.input} />
                     <TextInput placeholder="Start Time (e.g., 8:00 AM)" value={startTime} onChangeText={setStartTime} style={styles.input} />
                     <TextInput placeholder="End Time (e.g., 5:00 PM)" value={endTime} onChangeText={setEndTime} style={styles.input} />
+                    <TextInput placeholder="Appointment Interval in Mins (e.g., 30, 60)" value={interval} onChangeText={setInterval} style={styles.input} keyboardType="numeric" />
                     <TouchableOpacity onPress={handleAddService} style={styles.button}>
                         <Text style={styles.buttonText}>Add Service</Text>
                     </TouchableOpacity>
@@ -157,9 +176,11 @@ const ServicesScreen = () => {
                             {editingId === item.id ? (
                                 <>
                                     <TextInput value={editableService.businessName} onChangeText={(text) => handleEditChange('businessName', text)} style={styles.input} />
+                                    <TextInput value={editableService.category} onChangeText={(text) => handleEditChange('category', text)} style={styles.input} />
                                     <TextInput value={editableService.workingDays} onChangeText={(text) => handleEditChange('workingDays', text)} style={styles.input} />
                                     <TextInput value={editableService.startTime} onChangeText={(text) => handleEditChange('startTime', text)} style={styles.input} />
                                     <TextInput value={editableService.endTime} onChangeText={(text) => handleEditChange('endTime', text)} style={styles.input} />
+                                    <TextInput value={editableService.interval} onChangeText={(text) => handleEditChange('interval', text)} style={styles.input} keyboardType="numeric" />
                                     <TouchableOpacity onPress={() => handleUpdateService(item.id)} style={styles.button}>
                                         <Text style={styles.buttonText}>Save</Text>
                                     </TouchableOpacity>
@@ -167,9 +188,11 @@ const ServicesScreen = () => {
                             ) : (
                                 <>
                                     <Text style={styles.serviceText}>Name: {item.businessName}</Text>
+                                    <Text style={styles.serviceText}>Category: {item.category}</Text>
                                     <Text style={styles.serviceText}>Working Days: {item.workingDays}</Text>
                                     <Text style={styles.serviceText}>Start Time: {item.startTime}</Text>
                                     <Text style={styles.serviceText}>End Time: {item.endTime}</Text>
+                                    <Text style={styles.serviceText}>Interval: {item.interval} min</Text>
                                     <View style={styles.actionButtons}>
                                         <TouchableOpacity onPress={() => startEditing(item)} style={[styles.button, styles.editButton]}>
                                             <Text style={styles.buttonText}>Update</Text>

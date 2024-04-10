@@ -19,6 +19,12 @@ import OrdersScreen from './Screens/OrdersScreen';
 import SettingsScreen from './Screens/SettingsScreen';
 import ServicesScreen from "./Screens/ServicesScreen";
 import ProductsScreen from "./Screens/ProductsScreen";
+import CustomerSearchScreen from './Screens/CustomerSearchScreen';
+import CustomerOrdersScreen from './Screens/CustomerOrdersScreen';
+import CustomerAppointmentScreen from './Screens/CustomerAppointmentScreen';
+import CustomerAccountScreen from './Screens/CustomerAccountScreen';
+import BookingScreen from "./Screens/BookingScreen";
+import BookingConfirmationScreen from './Screens/BookingConfirmationScreen';
 
 // Import AdminSearchUsersScreen
 
@@ -44,12 +50,17 @@ export default function App() {
                 <Stack.Screen name="EntrepreneurLogin" component={EntrepreneurLoginScreen} options={{ title: 'Entrepreneur Login' }} />
                 <Stack.Screen name="EntrepreneurHome" component={EntrepreneurHomeScreen} options={{ title: 'Entrepreneur Home' }} />
                 <Stack.Screen name="EntrepreneurSignUp" component={EntrepreneurSignUpScreen} options={{ title: 'Entrepreneur Sign Up' }} />
-                <Stack.Screen name="SettingsScreen" component={SettingsScreen} options={{ title: 'SettingsScreen' }} />
-                <Stack.Screen name="OrdersScreen" component={OrdersScreen} options={{ title: 'OrdersScreen' }} />
+                <Stack.Screen name="SettingsScreen" component={SettingsScreen} options={{ title: 'Settings Screen' }} />
+                <Stack.Screen name="OrdersScreen" component={OrdersScreen} options={{ title: 'Orders Screen' }} />
                 <Stack.Screen name="ServicesProducts" component={ServicesProductsScreen} options={{ title: 'Services/Products' }} />
-                <Stack.Screen name="ServicesScreen" component={ServicesScreen} options={{title: 'ServicesScreen'}} />
-                <Stack.Screen name="ProductsScreen" component={ProductsScreen} options={{title: 'ProductsScreen'}} />
-
+                <Stack.Screen name="ServicesScreen" component={ServicesScreen} options={{title: 'Services Screen'}} />
+                <Stack.Screen name="ProductsScreen" component={ProductsScreen} options={{title: 'Products Screen'}} />
+                <Stack.Screen name="CustomerSearchScreen" component={CustomerSearchScreen} options={{title: '  Screen'}}/>
+                <Stack.Screen name="CustomerOrdersScreen" component={CustomerOrdersScreen} options={{title: 'Customer Orders Screen'}}/>
+                <Stack.Screen name="CustomerAppointmentScreen" component={CustomerAppointmentScreen} options={{title: 'Customer Appointment Screen'}}/>
+                <Stack.Screen name="CustomerAccountScreen" component={CustomerAccountScreen} options={{title: 'Customer Account Screen'}}/>
+                <Stack.Screen name="BookingScreen" component={BookingScreen} options={{title: 'Booking Screen'}}/>
+                <Stack.Screen name="BookingConfirmationScreen" component={BookingConfirmationScreen} options={{ title: 'Booking Confirmation' }}/>
             </Stack.Navigator>
         </NavigationContainer>
     );
