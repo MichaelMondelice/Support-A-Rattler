@@ -63,9 +63,6 @@ const CustomerHomeScreen = ({ navigation }) => {
                 <View style={styles.header}>
                     <Image source={require('../images/img.png')} style={styles.profilePic} />
                     <Text style={styles.welcome}>Welcome, {userData ? userData.name : 'User'}</Text>
-                    <TouchableOpacity onPress={() => navigation.navigate('SettingsScreen')}>
-                        <MaterialCommunityIcons name="settings" size={24} color="#4C6854" />
-                    </TouchableOpacity>
                 </View>
 
                 <Text style={styles.recommendedTitle}>Recommended</Text>
@@ -141,8 +138,9 @@ const styles = StyleSheet.create({
         borderWidth: 2,
     },
     welcome: {
-        fontSize: 18,
+        fontSize: 24,
         fontWeight: 'bold',
+        textAlign: 'center',
     },
     tabBarContainer: {
         flexDirection: 'row',
@@ -191,6 +189,7 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: '#555',
     },
+
 });
 
 export default CustomerHomeScreen;

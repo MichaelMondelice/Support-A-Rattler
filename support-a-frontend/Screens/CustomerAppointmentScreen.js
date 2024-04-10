@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert } from 'react-native';
 import { getAuth } from "firebase/auth";
 import { db } from "../firebase";
-import { collection, query, where, getDocs, deleteDoc, doc } from "firebase/firestore";
+import { collection, query, where, getDocs, deleteDoc, doc, getDoc } from "firebase/firestore";
 
 const CustomerAppointmentScreen = () => {
     const [appointments, setAppointments] = useState([]);
@@ -15,7 +15,24 @@ const CustomerAppointmentScreen = () => {
             if (user) {
                 const appointmentsQuery = query(collection(db, "AppointmentsBooked"), where("customerEmail", "==", user.email));
                 const querySnapshot = await getDocs(appointmentsQuery);
-                const fetchedAppointments = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+                const fetchedAppointments = [];
+                for (const docSnapshot of querySnapshot.docs) {
+                    const appointmentData = docSnapshot.data();
+                    const serviceRef = doc(db, "Services", appointmentData.serviceId);
+                    const serviceDoc = await getDoc(serviceRef);
+
+                    if (serviceDoc.exists()) {
+                        const serviceData = serviceDoc.data();
+                        fetchedAppointments.push({
+                            id: docSnapshot.id,
+                            businessName: serviceData.businessName,
+                            category: serviceData.category,
+                            time: appointmentData.time
+                        });
+                    }
+                }
+
                 setAppointments(fetchedAppointments);
             } else {
                 Alert.alert("Error", "You must be signed in to view your appointments.");
@@ -43,7 +60,8 @@ const CustomerAppointmentScreen = () => {
                 keyExtractor={item => item.id}
                 renderItem={({ item }) => (
                     <View style={styles.appointmentItem}>
-                        <Text style={styles.appointmentText}>Service: {item.serviceId}</Text>
+                        <Text style={styles.appointmentText}>Business Name: {item.businessName}</Text>
+                        <Text style={styles.appointmentText}>Category: {item.category}</Text>
                         <Text style={styles.appointmentText}>Time: {item.time}</Text>
                         <TouchableOpacity style={styles.deleteButton} onPress={() => handleDeleteAppointment(item.id)}>
                             <Text style={styles.deleteButtonText}>Delete</Text>
