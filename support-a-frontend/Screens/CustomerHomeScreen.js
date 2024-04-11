@@ -8,6 +8,7 @@ import { db } from "../firebase";
 const CustomerHomeScreen = ({ navigation }) => {
     const [userData, setUserData] = useState(null);
     const [services, setServices] = useState([]);
+    const [products, setProducts] = useState([]); // State to store products
 
     const categoryIcons = {
         'Health': 'heart',
@@ -20,10 +21,12 @@ const CustomerHomeScreen = ({ navigation }) => {
         'Videography': 'camera',
         'Photography': 'camera',
         'Personal Trainer': 'run',
+        'Fashion': 'clothing',
+        // Add more category icons as needed
     };
 
     useEffect(() => {
-        const fetchUserData = async () => {
+        const fetchUserDataAndData = async () => {
             const auth = getAuth();
             const user = auth.currentUser;
             if (user) {
@@ -34,27 +37,28 @@ const CustomerHomeScreen = ({ navigation }) => {
                 } else {
                     Alert.alert("Error", "No user data found");
                 }
-            }
-        };
 
-        fetchUserData().catch(console.error);
-
-        const fetchServices = async () => {
-            try {
-                const querySnapshot = await getDocs(collection(db, "Services"));
-                const servicesList = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                // Fetch services
+                const servicesSnapshot = await getDocs(collection(db, "Services"));
+                const servicesList = servicesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 setServices(servicesList);
-            } catch (error) {
-                console.error("Error fetching services: ", error);
-                Alert.alert("Error", "Failed to fetch services.");
+
+                // Fetch products
+                const productsSnapshot = await getDocs(collection(db, "ProductService"));
+                const productsList = productsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                setProducts(productsList);
             }
         };
 
-        fetchServices();
+        fetchUserDataAndData().catch(console.error);
     }, []);
 
     const handleServiceClick = (service) => {
         navigation.navigate('BookingScreen', { service });
+    };
+
+    const handleProductClick = (product) => {
+        navigation.navigate('ProductDetailsScreen', { product });
     };
 
     return (
@@ -65,7 +69,7 @@ const CustomerHomeScreen = ({ navigation }) => {
                     <Text style={styles.welcome}>Welcome, {userData ? userData.name : 'User'}</Text>
                 </View>
 
-                <Text style={styles.recommendedTitle}>Recommended</Text>
+                <Text style={styles.recommendedTitle}>Recommended Services</Text>
                 <FlatList
                     data={services}
                     keyExtractor={item => item.id}
@@ -86,7 +90,28 @@ const CustomerHomeScreen = ({ navigation }) => {
                         </TouchableOpacity>
                     )}
                 />
-                {/* Place other content you want to display on the home screen here */}
+
+                <Text style={styles.recommendedTitle}>Recommended Products</Text>
+                <FlatList
+                    data={products}
+                    keyExtractor={item => item.id}
+                    renderItem={({ item }) => (
+                        <TouchableOpacity style={styles.serviceItem} onPress={() => handleProductClick(item)}>
+                            <View style={styles.serviceContent}>
+                                <MaterialCommunityIcons
+                                    name={categoryIcons[item.category] || 'help-circle'}
+                                    size={40}
+                                    color="#4CAF50"
+                                    style={styles.serviceIcon}
+                                />
+                                <View>
+                                    <Text style={styles.serviceText}>{item.productName}</Text>
+                                    <Text style={styles.serviceCategory}>{item.category}</Text>
+                                </View>
+                            </View>
+                        </TouchableOpacity>
+                    )}
+                />
             </ScrollView>
             <View style={styles.tabBarContainer}>
                 <TouchableOpacity style={styles.tabItem} onPress={() => navigation.navigate('CustomerHome')}>

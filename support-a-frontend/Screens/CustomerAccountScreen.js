@@ -101,6 +101,7 @@ const CustomerAccountScreen = ({ navigation }) => {
             <Button title="Update Account" onPress={handleUpdateAccount} />
             <Button title="Delete Account" onPress={handleDeleteAccount} color="red" />
         </View>
+
     );
 };
 

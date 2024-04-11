@@ -25,7 +25,7 @@ import CustomerAppointmentScreen from './Screens/CustomerAppointmentScreen';
 import CustomerAccountScreen from './Screens/CustomerAccountScreen';
 import BookingScreen from "./Screens/BookingScreen";
 import BookingConfirmationScreen from './Screens/BookingConfirmationScreen';
-
+import ProductDetailsScreen from './Screens/ProductDetailsScreen';
 // Import AdminSearchUsersScreen
 
 
@@ -61,6 +61,7 @@ export default function App() {
                 <Stack.Screen name="CustomerAccountScreen" component={CustomerAccountScreen} options={{title: 'Customer Account Screen'}}/>
                 <Stack.Screen name="BookingScreen" component={BookingScreen} options={{title: 'Booking Screen'}}/>
                 <Stack.Screen name="BookingConfirmationScreen" component={BookingConfirmationScreen} options={{ title: 'Booking Confirmation' }}/>
+                <Stack.Screen name="ProductDetailsScreen" component={ProductDetailsScreen} options={{title: 'Product Details Screen'}}/>
             </Stack.Navigator>
         </NavigationContainer>
     );

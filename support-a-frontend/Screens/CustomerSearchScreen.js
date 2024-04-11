@@ -8,8 +8,9 @@ import { db } from "../firebase";
 const CustomerSearchScreen = ({ navigation }) => {
     const [userData, setUserData] = useState(null);
     const [services, setServices] = useState([]);
+    const [products, setProducts] = useState([]); // Added products state
     const [searchQuery, setSearchQuery] = useState('');
-    const [filteredServices, setFilteredServices] = useState([]);
+    const [filteredData, setFilteredData] = useState([]); // Combined filtered services and products
 
     const categoryIcons = {
         'Health': 'heart',
@@ -22,6 +23,7 @@ const CustomerSearchScreen = ({ navigation }) => {
         'Videography': 'camera',
         'Photography': 'camera',
         'Personal Trainer': 'run',
+        // Add more icons as needed
     };
 
     useEffect(() => {
@@ -39,37 +41,51 @@ const CustomerSearchScreen = ({ navigation }) => {
             }
         };
 
-        fetchUserData().catch(console.error);
-
-        const fetchServices = async () => {
+        const fetchData = async () => {
             try {
-                const querySnapshot = await getDocs(collection(db, "Services"));
-                const servicesList = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                // Fetch services
+                const servicesSnapshot = await getDocs(collection(db, "Services"));
+                const servicesList = servicesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 setServices(servicesList);
+
+                // Fetch products
+                const productsSnapshot = await getDocs(collection(db, "ProductService"));
+                const productsList = productsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                setProducts(productsList);
             } catch (error) {
-                console.error("Error fetching services: ", error);
-                Alert.alert("Error", "Failed to fetch services.");
+                console.error("Error fetching data: ", error);
+                Alert.alert("Error", "Failed to fetch data.");
             }
         };
 
-        fetchServices();
+        fetchUserData().catch(console.error);
+        fetchData().catch(console.error);
     }, []);
 
     useEffect(() => {
         if (searchQuery.trim() !== '') {
             const queryLowerCase = searchQuery.toLowerCase();
-            const filtered = services.filter(service =>
+            const filteredServices = services.filter(service =>
                 service.businessName.toLowerCase().includes(queryLowerCase) ||
                 service.category.toLowerCase().includes(queryLowerCase)
             );
-            setFilteredServices(filtered);
+            const filteredProducts = products.filter(product =>
+                product.productName.toLowerCase().includes(queryLowerCase) ||
+                product.category.toLowerCase().includes(queryLowerCase)
+            );
+            setFilteredData([...filteredServices, ...filteredProducts]); // Combine and set the filtered data
         } else {
-            setFilteredServices(services);
+            setFilteredData([...services, ...products]); // Combine and set all data when not searching
         }
-    }, [searchQuery, services]);
+    }, [searchQuery, services, products]);
 
-    const handleServiceClick = (service) => {
-        navigation.navigate('BookingScreen', { service });
+    const handleItemClick = (item) => {
+        // Navigate based on the type of item (service or product)
+        if (item.businessName) {
+            navigation.navigate('BookingScreen', { service: item });
+        } else {
+            navigation.navigate('ProductDetailsScreen', { product: item });
+        }
     };
 
     return (
@@ -84,17 +100,17 @@ const CustomerSearchScreen = ({ navigation }) => {
                 </View>
 
                 <TextInput
-                    placeholder="Search services..."
+                    placeholder="Search services and products..."
                     value={searchQuery}
                     onChangeText={setSearchQuery}
                     style={styles.searchInput}
                 />
-                <Text style={styles.recommendedTitle}>Recommended</Text>
+                <Text style={styles.recommendedTitle}>Results</Text>
                 <FlatList
-                    data={filteredServices}
+                    data={filteredData}
                     keyExtractor={item => item.id}
                     renderItem={({ item }) => (
-                        <TouchableOpacity style={styles.serviceItem} onPress={() => handleServiceClick(item)}>
+                        <TouchableOpacity style={styles.serviceItem} onPress={() => handleItemClick(item)}>
                             <View style={styles.serviceContent}>
                                 <MaterialCommunityIcons
                                     name={categoryIcons[item.category] || 'help-circle'}
@@ -103,7 +119,7 @@ const CustomerSearchScreen = ({ navigation }) => {
                                     style={styles.serviceIcon}
                                 />
                                 <View>
-                                    <Text style={styles.serviceText}>{item.businessName}</Text>
+                                    <Text style={styles.serviceText}>{item.businessName || item.productName}</Text>
                                     <Text style={styles.serviceCategory}>{item.category}</Text>
                                 </View>
                             </View>

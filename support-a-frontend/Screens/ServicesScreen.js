@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, TextInput, TouchableOpacity, Text, StyleSheet, Alert, ScrollView, FlatList } from 'react-native';
 import { db, auth } from "../firebase";
-import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc } from "firebase/firestore";
+import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, where } from "firebase/firestore";
 
 const ServicesScreen = () => {
     const [selectedTab, setSelectedTab] = useState('CreateWorkSchedule');
@@ -14,27 +14,40 @@ const ServicesScreen = () => {
     const [startTime, setStartTime] = useState('');
     const [endTime, setEndTime] = useState('');
     const [interval, setInterval] = useState('');
+    const [appointments, setAppointments] = useState([]); // New state to store appointments
+
 
 
     useEffect(() => {
-        const fetchServices = async () => {
-            try {
-                const user = auth.currentUser;
-                if (!user) {
-                    Alert.alert("Error", "You must be signed in to view services.");
-                    return;
-                }
-                const querySnapshot = await getDocs(collection(db, "Services"));
-                const servicesList = querySnapshot.docs
-                    .map(doc => ({ id: doc.id, ...doc.data() }))
-                    .filter(service => service.userId === user.uid); // Filter services by the current user's ID
-                setServices(servicesList);
-            } catch (error) {
-                console.error("Error fetching services: ", error);
-                Alert.alert("Error", "Failed to fetch services.");
+        const fetchServicesAndAppointments = async () => {
+            const user = auth.currentUser;
+            if (!user) {
+                Alert.alert("Error", "You must be signed in to view services.");
+                return;
             }
+
+            // Fetch services created by the logged-in entrepreneur
+            const servicesQuery = query(collection(db, "Services"), where("userId", "==", user.uid));
+            const servicesSnapshot = await getDocs(servicesQuery);
+            const servicesList = servicesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            setServices(servicesList);
+
+            // For each service, fetch appointments booked for that service
+            let allAppointments = [];
+            for (const service of servicesList) {
+                const appointmentsQuery = query(collection(db, "AppointmentsBooked"), where("serviceId", "==", service.id));
+                const appointmentsSnapshot = await getDocs(appointmentsQuery);
+                const appointmentsForService = appointmentsSnapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data(),
+                    serviceName: service.businessName // Include the service name in the appointment data
+                }));
+                allAppointments = [...allAppointments, ...appointmentsForService];
+            }
+            setAppointments(allAppointments);
         };
-        fetchServices();
+
+        fetchServicesAndAppointments();
     }, []);
 
     const validateInputs = () => {
@@ -208,9 +221,20 @@ const ServicesScreen = () => {
                 />
             )}
             {selectedTab === 'AllAppointments' && (
-                <View>
-                    <Text style={styles.placeholderText}>All Appointments content goes here.</Text>
-                </View>
+                <FlatList
+                    data={appointments}
+                    keyExtractor={item => item.id}
+                    renderItem={({ item }) => (
+                        <View style={styles.appointmentItem}>
+                            <Text style={styles.appointmentText}>Customer Email: {item.customerEmail}</Text>
+                            <Text style={styles.appointmentText}>Service Name: {item.serviceName}</Text>
+                            <Text style={styles.appointmentText}>Appointment Time: {item.time}</Text>
+                            <TouchableOpacity style={styles.deleteButton} onPress={() => {/* Delete appointment logic here */}}>
+                                <Text style={styles.deleteButtonText}>Delete</Text>
+                            </TouchableOpacity>
+                        </View>
+                    )}
+                />
             )}
         </ScrollView>
     );
@@ -303,6 +327,26 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.23,
         shadowRadius: 2.62,
         elevation: 4, // Matching subtle shadow
+    },
+    appointmentItem: {
+        backgroundColor: '#C8E6C9', // Light green background
+        padding: 15, // Padding inside each appointment item
+        borderRadius: 6, // Rounded corners for a softer look
+        marginBottom: 10, // Space between each appointment item
+        borderWidth: 1, // Thin border for delineation
+        borderColor: '#4C6854', // Dark green border to match the theme
+        marginTop: 10, // Space above each appointment item
+        marginHorizontal: 5, // Space on the sides for wider appearance
+    },
+    appointmentText: {
+        fontSize: 16, // Text size for readability
+        color: '#333', // Dark text for contrast against the light background
+        marginBottom: 5, // Space between lines of text within an appointment item
+    },
+
+    deleteButtonText: {
+        color: '#FFFFFF', // White text for visibility against the red button
+        fontWeight: 'bold', // Bold text to emphasize the action
     },
 });
 
