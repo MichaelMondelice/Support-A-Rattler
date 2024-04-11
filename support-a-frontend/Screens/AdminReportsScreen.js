@@ -11,13 +11,16 @@ const AdminReportsScreen = () => {
     useEffect(() => {
         const fetchProductsServices = async () => {
             try {
-                const querySnapshot = await getDocs(collection(db, 'ProductService'));
-                const data = [];
-                querySnapshot.forEach((doc) => {
-                    data.push({ id: doc.id, ...doc.data() });
-                });
-                setProductsServicesList(data);
-                setFilteredProductsServicesList(data);
+                const productServiceSnapshot = await getDocs(collection(db, 'ProductService'));
+                const productServiceData = productServiceSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), collection: 'ProductService' }));
+
+                const servicesSnapshot = await getDocs(collection(db, 'Services'));
+                const servicesData = servicesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), collection: 'Services' }));
+
+                const mergedData = [...productServiceData, ...servicesData];
+
+                setProductsServicesList(mergedData);
+                setFilteredProductsServicesList(mergedData);
             } catch (error) {
                 console.error('Error fetching products and services:', error);
             }
@@ -26,14 +29,15 @@ const AdminReportsScreen = () => {
         fetchProductsServices();
     }, []);
 
+
     // Function to handle applying filter
     const applyFilter = (type) => {
         setFilter(type);
         if (type === 'Product') {
-            const filteredList = productsServicesList.filter(item => item.type === 'Product');
+            const filteredList = productsServicesList.filter(item => item.collection === 'ProductService');
             setFilteredProductsServicesList(filteredList);
         } else if (type === 'Service') {
-            const filteredList = productsServicesList.filter(item => item.type === 'Service');
+            const filteredList = productsServicesList.filter(item => item.collection === 'Services');
             setFilteredProductsServicesList(filteredList);
         } else { // If type is 'all' or any other unexpected value
             setFilteredProductsServicesList(productsServicesList); // Reset to all products and services
@@ -61,7 +65,7 @@ const AdminReportsScreen = () => {
             <View style={styles.userList}>
                 {filteredProductsServicesList.map((item) => (
                     <View key={item.id} style={styles.userItem}>
-                        <Text style={styles.userName}>{item.name}</Text>
+                        <Text style={styles.userName}>{item.businessName}</Text>
                         <View style={styles.buttonsContainer}>
                             <TouchableOpacity style={styles.button}>
                                 <Text style={styles.buttonText}>{item.orders} Orders</Text>
