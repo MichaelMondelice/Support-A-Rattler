@@ -33,12 +33,12 @@ const OrdersScreen = () => {
                 keyExtractor={item => item.id}
                 renderItem={({ item }) => (
                     <View style={styles.card}>
-                        {/*<Text style={styles.cardDetail}>Customer ID: {item.customerID}</Text>
-                        <Text style={styles.cardDetail}>Order Date: {item.orderDate}</Text>
-                        <Text style={styles.cardDetail}>Product/Service ID: {item.productServiceID}</Text>*/}
-                        <Text style={styles.cardDetail}>Quantity: {item.quantity}</Text>
-                        <Text style={styles.cardDetail}>Status: {item.status}</Text>
-                        <Text style={styles.cardDetail}>Total Price: ${item.totalPrice}</Text>
+                        {/*<Text style={styles.cardDetail}>Customer ID: {item.CustomerID}</Text>
+                        <Text style={styles.cardDetail}>Order Date: {item.OrderDate}</Text>
+                        <Text style={styles.cardDetail}>Product/Service ID: {item.ProdServID}</Text>*/}
+                        <Text style={styles.cardDetail}>Quantity: {item.Quantity}</Text>
+                        <Text style={styles.cardDetail}>Status: {item.Status}</Text>
+                        <Text style={styles.cardDetail}>Total Price: ${item.TotalPrice}</Text>
                     </View>
                 )}
             />
