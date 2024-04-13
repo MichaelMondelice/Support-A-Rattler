@@ -27,3 +27,6 @@ const db = getFirestore(app);
 const auth = getAuth(app); // Initialize Firebase Authentication
 
 export { app, analytics, db, auth }; // Export Firestore and Authentication instances
+
+// Log Firestore instance
+console.log('Firestore instance:', db);

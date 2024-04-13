@@ -1,42 +1,82 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Image, Modal, TextInput } from 'react-native';
-
-// Dummy data for users
-const users = [
-    { id: '1', name: 'John Doe', type: 'seller' },
-    { id: '2', name: 'Jane Smith', type: 'customer' },
-    { id: '3', name: 'Michael Johnson', type: 'seller' },
-    { id: '4', name: 'Emily Davis', type: 'customer' },
-    { id: '5', name: 'David Wilson', type: 'seller' },
-];
+import React, { useState, useEffect } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Image, Modal, TextInput, Button } from 'react-native';
+import { collection, getDocs, query, where, addDoc, serverTimestamp, orderBy, onSnapshot } from 'firebase/firestore';
+import { db } from '../firebase'; // Import your Firestore instance
 
 const AdminMessagesScreen = () => {
-    const [userList, setUserList] = useState(users);
+    const [userList, setUserList] = useState([]);
     const [showRequests, setShowRequests] = useState(false);
     const [selectedUser, setSelectedUser] = useState(null);
     const [messageInput, setMessageInput] = useState('');
+    const [chatMessages, setChatMessages] = useState([]);
+
+    // Fetch users from Firestore based on their role
+    useEffect(() => {
+        const fetchUsers = async () => {
+            try {
+                const q = query(collection(db, 'User'), where('role', 'in', ['Entrepreneur', 'Customer']));
+                const usersSnapshot = await getDocs(q);
+                const usersData = usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                console.log('Users data:', usersData); // Log users data
+                setUserList(usersData);
+            } catch (error) {
+                console.error('Error fetching users:', error);
+            }
+        };
+        fetchUsers();
+    }, []);
 
     // Function to handle toggling between users and requests
     const toggleRequests = () => {
         setShowRequests(!showRequests);
     };
 
-    // Function to handle sending a message to a user
-    const sendMessage = () => {
-        console.log('Message sent:', messageInput);
-        // Here you can add logic to send the message
-        // Clear message input after sending
-        setMessageInput('');
-    };
-
     // Function to handle selecting a user and displaying the chat window
     const selectUser = (user) => {
         setSelectedUser(user);
+        // Fetch initial chat messages
+        fetchChatMessages(user.id);
     };
 
     // Function to close the chat window
     const closeChat = () => {
         setSelectedUser(null);
+    };
+
+    // Function to fetch chat messages from Firestore
+    const fetchChatMessages = async (userId) => {
+        try {
+            const q = query(collection(db, 'Message'), where('sentTo', '==', userId), orderBy('sentAt'));
+            const unsubscribe = onSnapshot(q, (snapshot) => {
+                const messagesData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                console.log('Chat messages:', messagesData); // Log chat messages
+                setChatMessages(messagesData);
+            });
+            return unsubscribe;
+        } catch (error) {
+            console.error('Error fetching chat messages:', error);
+        }
+    };
+
+    // Function to handle sending a message
+    const sendMessage = async () => {
+        try {
+            // Check if a message is not empty
+            if (messageInput.trim() !== '') {
+                const message = {
+                    content: messageInput,
+                    sentFrom: 'Admin', // Assuming the message is sent from the admin
+                    sentTo: selectedUser.id, // Sending the message to the selected user
+                    sentAt: serverTimestamp() // Adding the current timestamp
+                };
+                // Add the message to Firestore
+                await addDoc(collection(db, 'Message'), message);
+                // Clear the message input field
+                setMessageInput('');
+            }
+        } catch (error) {
+            console.error('Error sending message:', error);
+        }
     };
 
     return (
@@ -62,8 +102,8 @@ const AdminMessagesScreen = () => {
                 ) : (
                     userList.map((user) => (
                         <TouchableOpacity key={user.id} onPress={() => selectUser(user)} style={styles.userItem}>
-                            <Text style={styles.userName}>{user.name}</Text>
-                            <Text style={styles.userType}>{user.type}</Text>
+                            <Text style={styles.userName}>{`${user.firstName} ${user.lastName}`}</Text>
+                            <Text style={styles.userType}>{user.role}</Text>
                         </TouchableOpacity>
                     ))
                 )}
@@ -81,21 +121,20 @@ const AdminMessagesScreen = () => {
                             <Text style={styles.closeButtonText}>Close</Text>
                         </TouchableOpacity>
                         <View style={styles.chatContainer}>
-                            <Text style={styles.chatTitle}>Chat with {selectedUser?.name}</Text>
-                            <ScrollView style={styles.chatMessages}>
-                                {/* Display chat messages here */}
-                            </ScrollView>
-                            <View style={styles.messageInputContainer}>
-                                <TextInput
-                                    style={styles.messageInput}
-                                    placeholder="Type your message..."
-                                    value={messageInput}
-                                    onChangeText={setMessageInput}
-                                />
-                                <TouchableOpacity style={styles.sendButton} onPress={sendMessage}>
-                                    <Text style={styles.sendButtonText}>Send</Text>
-                                </TouchableOpacity>
-                            </View>
+                            <Text style={styles.chatTitle}>Chat with {selectedUser?.firstName} {selectedUser?.lastName}</Text>
+                            {/* Display chat messages here */}
+                            {chatMessages.map((message) => (
+                                <View key={message.id} style={styles.messageItem}>
+                                    <Text>{message.content}</Text>
+                                </View>
+                            ))}
+                            <TextInput
+                                style={styles.messageInput}
+                                placeholder="Type a message..."
+                                value={messageInput}
+                                onChangeText={setMessageInput}
+                            />
+                            <Button title="Send" onPress={sendMessage} />
                         </View>
                     </View>
                 </View>
@@ -186,19 +225,18 @@ const styles = StyleSheet.create({
         backgroundColor: 'rgba(0, 0, 0, 0.5)',
     },
     modalContent: {
+        width: '80%',
         backgroundColor: '#FFF',
         borderRadius: 10,
         padding: 20,
-        width: '80%',
     },
     closeButton: {
         alignSelf: 'flex-end',
-        marginBottom: 10,
     },
     closeButtonText: {
+        color: '#4CAF50',
         fontSize: 16,
         fontWeight: 'bold',
-        color: '#4CAF50',
     },
     chatContainer: {
         flex: 1,
@@ -210,31 +248,18 @@ const styles = StyleSheet.create({
         color: '#333',
         marginBottom: 10,
     },
-    chatMessages: {
-        flex: 1,
-    },
-    messageInputContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
+    messageItem: {
+        backgroundColor: '#EEE',
+        padding: 10,
+        borderRadius: 10,
+        marginBottom: 5,
     },
     messageInput: {
-        flex: 1,
+        height: 40,
+        borderColor: 'gray',
         borderWidth: 1,
-        borderColor: '#CCC',
-        borderRadius: 5,
+        marginBottom: 10,
         paddingHorizontal: 10,
-        marginRight: 10,
-    },
-    sendButton: {
-        backgroundColor: '#4CAF50',
-        borderRadius: 5,
-        paddingVertical: 10,
-        paddingHorizontal: 20,
-    },
-    sendButtonText: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        color: '#FFF',
     },
 });
 
