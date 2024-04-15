@@ -124,8 +124,9 @@ const AdminMessagesScreen = () => {
                             <Text style={styles.chatTitle}>Chat with {selectedUser?.firstName} {selectedUser?.lastName}</Text>
                             {/* Display chat messages here */}
                             {chatMessages.map((message) => (
-                                <View key={message.id} style={styles.messageItem}>
-                                    <Text>{message.content}</Text>
+                                <View key={message.id} style={[styles.messageItem, message.sentFrom === 'Admin' ? styles.adminMessage : styles.userMessage]}>
+                                    <Text style={styles.messageHeader}>{message.sentFrom === 'Admin' ? 'Admin' : `${selectedUser?.firstName} ${selectedUser?.lastName}`}</Text>
+                                    <Text style={styles.messageContent}>{message.content}</Text>
                                 </View>
                             ))}
                             <TextInput
@@ -249,10 +250,26 @@ const styles = StyleSheet.create({
         marginBottom: 10,
     },
     messageItem: {
-        backgroundColor: '#EEE',
+        marginBottom: 5,
         padding: 10,
         borderRadius: 10,
+    },
+    adminMessage: {
+        backgroundColor: '#1E90FF',
+        alignSelf: 'flex-end',
+    },
+    userMessage: {
+        backgroundColor: '#4CAF50',
+        alignSelf: 'flex-start',
+    },
+    messageHeader: {
+        fontWeight: 'bold',
         marginBottom: 5,
+        color: '#FFF',
+    },
+    messageContent: {
+        fontSize: 16,
+        color: '#FFF',
     },
     messageInput: {
         height: 40,
