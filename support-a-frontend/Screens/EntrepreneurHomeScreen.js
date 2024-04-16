@@ -1,4 +1,3 @@
-//EntrepreneurHomeScreen.js
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Image, StyleSheet, ScrollView, Dimensions } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -12,12 +11,11 @@ const screenWidth = Dimensions.get('window').width;
 const data = {
     labels: ['January', 'February', 'March', 'April', 'May', 'June'],
     datasets: [{
-        data: [ 20, 45, 28, 80, 99, 43 ],
+        data: [20, 45, 28, 80, 99, 43],
         color: (opacity = 1) => `rgba(134, 65, 244, ${opacity})`,
         strokeWidth: 2
     }]
 };
-
 
 const chartConfig = {
     backgroundGradientFrom: '#DFF2E3',
@@ -37,6 +35,7 @@ const EntrepreneurHomeScreen = ({ navigation }) => {
         { id: '2', product: 'Product B', amount: 1, total: 50 },
         { id: '3', product: 'Product C', amount: 2, total: 100 },
     ]);
+    const [userData, setUserData] = useState(null);
 
     useEffect(() => {
         const auth = getAuth();
@@ -44,13 +43,19 @@ const EntrepreneurHomeScreen = ({ navigation }) => {
         if (user) {
             const fetchData = async () => {
                 const userRef = doc(db, "users", user.uid);
-                const docSnap = await getDoc(userRef);
-                if (docSnap.exists()) {
-                    // Assuming 'orders' field in user data contains recent orders
-                    setRecentOrders(docSnap.data().orders || recentOrders);
+                try {
+                    const docSnap = await getDoc(userRef);
+                    if (docSnap.exists()) {
+                        setUserData(docSnap.data());
+                        setRecentOrders(docSnap.data().orders || recentOrders);
+                    } else {
+                        console.error("No user data found");
+                    }
+                } catch (error) {
+                    console.error("Failed to fetch user data:", error);
                 }
             };
-            fetchData().catch(console.error);
+            fetchData();
         }
     }, []);
 
@@ -73,18 +78,13 @@ const EntrepreneurHomeScreen = ({ navigation }) => {
                 <TouchableOpacity style={styles.sidebarItem} onPress={() => navigation.navigate('Messages')}>
                     <Text style={styles.sidebarText}>Messages</Text>
                 </TouchableOpacity>
-                <TouchableOpacity
-                    style={styles.sidebarItem}
-                    onPress={() => navigation.navigate('SettingsScreen')}
-                >
-                    <MaterialIcons name="settings" size={24} color="#4C6854" />
-                    <Text style={styles.sidebarText}>Settings</Text>
+                <TouchableOpacity style={styles.sidebarItem} onPress={() => navigation.navigate('SettingsScreen')}>
+                    <Text style={styles.sidebarText}>Account</Text>
                 </TouchableOpacity>
-
             </View>
             <ScrollView style={styles.mainContent}>
                 <TextInput style={styles.searchBar} placeholder="Search...." placeholderTextColor="#666" />
-                <Text style={styles.header}>Entrepreneur Dashboard</Text>
+                <Text style={styles.header}>Welcome, {userData ? userData.firstName : 'User'}</Text>
                 <ProgressChart
                     data={progressChartData}
                     width={screenWidth * 0.9}
@@ -113,26 +113,6 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         flexDirection: 'row',
-    },
-    card: {
-        backgroundColor: '#C8E6C9',
-        borderRadius: 6,
-        padding: 15,
-        marginTop: 10,
-        alignItems: 'center',
-    },
-    cardTitle: {
-        fontSize: 18,
-        color: '#333',
-    },
-    cardValue: {
-        fontSize: 22,
-        fontWeight: 'bold',
-        color: '#4C6854',
-    },
-    chart: {
-        marginTop: 20,
-        borderRadius: 16,
     },
     sidebar: {
         width: '25%',
