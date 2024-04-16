@@ -32,7 +32,12 @@ const EntrepreneurLoginScreen = ({ navigation }) => {
 
             if (docSnap.exists()) {
                 const userData = docSnap.data();
+                if (userData.role !== 'Entrepreneur') {
+                    setErrorMessage("You are not authorized to access this page");
+                    return;
+                }
                 if (userData.isActive) {
+
                     navigation.navigate('EntrepreneurHome', { userData });
                 } else {
                     setErrorMessage("Account is inactive, please contact support.");

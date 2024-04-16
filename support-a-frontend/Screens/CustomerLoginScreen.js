@@ -33,6 +33,10 @@ const CustomerLoginScreen = ({ navigation }) => {
 
             if (docSnap.exists()) {
                 const userData = docSnap.data();
+                if (userData.role !== 'Customer') {
+                    setErrorMessage("You are not authorized to access this page");
+                    return;
+                }
                 if (userData.isActive) {
                     navigation.navigate('CustomerHome', { userData });
                 } else {
