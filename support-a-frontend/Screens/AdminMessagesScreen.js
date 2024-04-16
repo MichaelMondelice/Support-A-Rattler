@@ -44,6 +44,7 @@ const AdminMessagesScreen = () => {
     };
 
     // Function to fetch chat messages from Firestore
+    // Function to fetch chat messages from Firestore
     const fetchChatMessages = async (userId) => {
         try {
             const q = query(collection(db, 'Message'), where('sentTo', '==', userId), orderBy('sentAt'));
@@ -79,15 +80,14 @@ const AdminMessagesScreen = () => {
         }
     };
 
-    // Function to handle sending a message
-    // Function to handle sending a message
+
     // Function to handle sending a message
     const handleMessageSend = async () => {
         // Check if a message is not empty
         if (messageInput.trim() !== '') {
             try {
                 // Get references for sentFrom and sentTo
-                const adminRef = doc(db, 'User', 'sK1UjFTcULqstualttJy');
+                const adminRef = doc(db, 'User', 'leUvr72rXnQtShBTKqRrimSypfa2');
                 const userRef = doc(db, 'User', selectedUser.id);
 
                 // Create the message object with references
@@ -154,8 +154,8 @@ const AdminMessagesScreen = () => {
                             <Text style={styles.chatTitle}>Chat with {selectedUser?.firstName} {selectedUser?.lastName}</Text>
                             {/* Display chat messages here */}
                             {chatMessages.map((message) => (
-                                <View key={message.id} style={[styles.messageItem, message.sentFrom === 'Admin' ? styles.adminMessage : styles.userMessage]}>
-                                    <Text style={styles.messageHeader}>{message.sentFrom === 'Admin' ? 'Admin' : `${selectedUser?.firstName} ${selectedUser?.lastName}`}</Text>
+                                <View key={message.id} style={[styles.messageItem, message.sentFrom === 'Admin' || message.sentFrom.id === 'leUvr72rXnQtShBTKqRrimSypfa2' ? styles.adminMessage : styles.userMessage]}>
+                                    <Text style={styles.messageHeader}>{message.sentFrom === 'Admin' || message.sentFrom.id === 'leUvr72rXnQtShBTKqRrimSypfa2' ? 'Admin' : `${selectedUser?.firstName} ${selectedUser?.lastName}`}</Text>
                                     <Text style={styles.messageContent}>{message.content}</Text>
                                 </View>
                             ))}

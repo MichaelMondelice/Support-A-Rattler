@@ -10,22 +10,39 @@ const AdminLoginScreen = ({ navigation }) => {
     const [errorMessage, setErrorMessage] = useState('');
 
     const handleLogin = async () => {
-        const adminEmail = 'FAMU@famu.edu';
-        const adminPassword = 'famu123';
-
-        if (email !== adminEmail || password !== adminPassword) {
-            setErrorMessage("Invalid email or password");
-            return;
-        }
-
         try {
-            // You can skip actual authentication if hardcoded email/password matches
+            const auth = getAuth();
+            const userCredential = await signInWithEmailAndPassword(auth, email, password);
+            const user = userCredential.user;
+
+            console.log("User UID from userCredential:", user.uid); // Log user UID from userCredential for debugging
+
+            // Fetch user data from Firestore based on the authenticated user's UID
+            const userDocRef = doc(db, 'User', user.uid);
+            const userDocSnapshot = await getDoc(userDocRef);
+
+            if (!userDocSnapshot.exists()) {
+                setErrorMessage("You are not authorized to access this page");
+                return;
+            }
+
+            const userData = userDocSnapshot.data();
+            const userRole = userData.role;
+
+            if (userRole !== 'Admin') {
+                setErrorMessage("You are not authorized to access this page");
+                return;
+            }
+
             navigation.navigate('AdminHome');
         } catch (error) {
             console.error("Login error: ", error);
-            setErrorMessage("Error logging in");
+            setErrorMessage("An error occurred during login");
         }
     };
+
+
+
 
     return (
         <KeyboardAvoidingView style={styles.container} behavior="padding">
