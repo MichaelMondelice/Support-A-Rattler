@@ -1,20 +1,23 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, Button } from 'react-native';
 import { collection, getDocs, doc, updateDoc } from 'firebase/firestore';
 import { db } from '../firebase'; // Ensure this is the correct path to your Firebase configuration
 
 const OrdersScreen = () => {
     const [orders, setOrders] = useState([]);
+    const [displayedOrders, setDisplayedOrders] = useState([]);
+    const [searchQuery, setSearchQuery] = useState('');
 
     useEffect(() => {
         const fetchOrders = async () => {
             try {
-                const querySnapshot = await getDocs(collection(db, 'Order')); // Check collection name
-                const fetchedOrders = [];
-                querySnapshot.forEach((doc) => {
-                    fetchedOrders.push({ id: doc.id, ...doc.data() });
-                });
+                const querySnapshot = await getDocs(collection(db, 'Order'));
+                const fetchedOrders = querySnapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                }));
                 setOrders(fetchedOrders);
+                setDisplayedOrders(fetchedOrders);
             } catch (error) {
                 console.error('Error fetching orders:', error);
             }
@@ -23,8 +26,18 @@ const OrdersScreen = () => {
         fetchOrders();
     }, []);
 
+    const handleSearch = () => {
+        const query = searchQuery.trim().toLowerCase();
+        const filtered = orders.filter(order =>
+            (order.id.toLowerCase().includes(query)) ||
+            (order.Status.toLowerCase().includes(query)) ||
+            order.Quantity.toString().includes(searchQuery)  // Correct way to include numeric search
+        );
+        setDisplayedOrders(filtered);
+    };
+
     const updateOrderStatus = async (id, newStatus) => {
-        const orderRef = doc(db, "Order", id); // Ensure this is the correct path and collection name
+        const orderRef = doc(db, "Order", id);
         try {
             await updateDoc(orderRef, {
                 Status: newStatus
@@ -36,6 +49,7 @@ const OrdersScreen = () => {
                 return order;
             });
             setOrders(updatedOrders);
+            setDisplayedOrders(updatedOrders);
         } catch (error) {
             console.error("Error updating order status:", error);
         }
@@ -43,10 +57,16 @@ const OrdersScreen = () => {
 
     return (
         <View style={styles.container}>
-            <TextInput style={styles.searchBar} placeholder="Search..." placeholderTextColor="#666" />
-            <Text style={styles.header}>Orders</Text>
+            <TextInput
+                style={styles.searchBar}
+                placeholder="Search..."
+                placeholderTextColor="#666"
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+            />
+            <Button title="Search" onPress={handleSearch} color="#4CAF50" />
             <FlatList
-                data={orders}
+                data={displayedOrders}
                 keyExtractor={item => item.id}
                 renderItem={({ item }) => (
                     <View style={styles.card}>
@@ -54,19 +74,19 @@ const OrdersScreen = () => {
                         <Text style={styles.cardDetail}>Quantity: {item.Quantity}</Text>
                         <Text style={styles.cardDetail}>Status: {item.Status}</Text>
                         <Text style={styles.cardDetail}>Total Price: ${item.TotalPrice}</Text>
-                        <TouchableOpacity onPress={() => updateOrderStatus(item.id, 'Order Received')}>
+                        <TouchableOpacity onPress={() => updateOrderStatus(item.id, 'Order Received')} style={styles.button}>
                             <Text>Mark as Order Received</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity onPress={() => updateOrderStatus(item.id, 'Payment Received')}>
+                        <TouchableOpacity onPress={() => updateOrderStatus(item.id, 'Payment Received')} style={styles.button}>
                             <Text>Mark as Payment Received</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity onPress={() => updateOrderStatus(item.id, 'Order Confirmed')}>
+                        <TouchableOpacity onPress={() => updateOrderStatus(item.id, 'Order Confirmed')} style={styles.button}>
                             <Text>Mark as Order Confirmed</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity onPress={() => updateOrderStatus(item.id, 'Order Shipped')}>
+                        <TouchableOpacity onPress={() => updateOrderStatus(item.id, 'Order Shipped')} style={styles.button}>
                             <Text>Mark as Order Shipped</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity onPress={() => updateOrderStatus(item.id, 'Order Complete')}>
+                        <TouchableOpacity onPress={() => updateOrderStatus(item.id, 'Order Complete')} style={styles.button}>
                             <Text>Mark as Order Complete</Text>
                         </TouchableOpacity>
                     </View>
@@ -89,11 +109,6 @@ const styles = StyleSheet.create({
         paddingHorizontal: 10,
         marginBottom: 20,
     },
-    header: {
-        fontSize: 22,
-        fontWeight: 'bold',
-        marginBottom: 10,
-    },
     card: {
         backgroundColor: '#fff',
         borderRadius: 8,
@@ -108,6 +123,12 @@ const styles = StyleSheet.create({
     cardDetail: {
         fontSize: 14,
         marginBottom: 5,
+    },
+    button: {
+        marginTop: 5,
+        backgroundColor: '#E0E0E0',
+        padding: 8,
+        borderRadius: 5,
     },
 });
 
