@@ -50,6 +50,7 @@ const OrdersScreen = () => {
                 keyExtractor={item => item.id}
                 renderItem={({ item }) => (
                     <View style={styles.card}>
+                        <Text style={styles.cardDetail}>Order ID: {item.id}</Text>
                         <Text style={styles.cardDetail}>Quantity: {item.Quantity}</Text>
                         <Text style={styles.cardDetail}>Status: {item.Status}</Text>
                         <Text style={styles.cardDetail}>Total Price: ${item.TotalPrice}</Text>
