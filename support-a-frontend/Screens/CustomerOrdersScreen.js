@@ -44,6 +44,7 @@ const CustomerOrdersScreen = () => {
                         <Text style={styles.orderText}>Order ID: {item.id}</Text>
                         <Text style={styles.orderText}>Product Name: {item.ProductName}</Text>
                         <Text style={styles.orderText}>Quantity: {item.Quantity}</Text>
+                        <Text style={styles.orderText}>Status: {item.Status}</Text>  {/* Displaying the current status of the order */}
                         {/* Add more details as needed */}
                     </View>
                 )}
