@@ -66,7 +66,7 @@ const CustomerHomeScreen = ({ navigation }) => {
             <ScrollView style={styles.scrollView}>
                 <View style={styles.header}>
                     <Image source={require('../images/img.png')} style={styles.profilePic} />
-                    <Text style={styles.welcome}>Welcome, {userData ? userData.name : 'User'}</Text>
+                    <Text style={styles.welcome}>Welcome, {userData ? userData.firstName : 'User'}</Text>
                 </View>
 
                 <Text style={styles.recommendedTitle}>Recommended Services</Text>
