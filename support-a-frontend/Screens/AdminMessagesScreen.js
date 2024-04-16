@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Image, Modal, TextInput, Button } from 'react-native';
-import { collection, getDocs, query, where, addDoc, serverTimestamp, orderBy, onSnapshot } from 'firebase/firestore';
+import { collection, getDocs, query, where, addDoc, serverTimestamp, orderBy, onSnapshot, doc } from 'firebase/firestore';
 import { db } from '../firebase'; // Import your Firestore instance
 
 const AdminMessagesScreen = () => {
@@ -58,26 +58,56 @@ const AdminMessagesScreen = () => {
         }
     };
 
-    // Function to handle sending a message
-    const sendMessage = async () => {
+    // Function to create a message object
+    const createMessageObject = (content, sentFrom, sentTo) => {
+        return {
+            content: content,
+            sentFrom: sentFrom,
+            sentTo: sentTo,
+            sentAt: serverTimestamp()
+        };
+    };
+
+    // Function to send a message
+    const sendMessage = async (message) => {
         try {
-            // Check if a message is not empty
-            if (messageInput.trim() !== '') {
-                const message = {
-                    content: messageInput,
-                    sentFrom: 'Admin', // Assuming the message is sent from the admin
-                    sentTo: selectedUser.id, // Sending the message to the selected user
-                    sentAt: serverTimestamp() // Adding the current timestamp
-                };
-                // Add the message to Firestore
-                await addDoc(collection(db, 'Message'), message);
-                // Clear the message input field
-                setMessageInput('');
-            }
+            // Add the message to Firestore
+            await addDoc(collection(db, 'Message'), message);
+            console.log('Message sent successfully:', message);
         } catch (error) {
             console.error('Error sending message:', error);
         }
     };
+
+    // Function to handle sending a message
+    // Function to handle sending a message
+    // Function to handle sending a message
+    const handleMessageSend = async () => {
+        // Check if a message is not empty
+        if (messageInput.trim() !== '') {
+            try {
+                // Get references for sentFrom and sentTo
+                const adminRef = doc(db, 'User', 'sK1UjFTcULqstualttJy');
+                const userRef = doc(db, 'User', selectedUser.id);
+
+                // Create the message object with references
+                const message = createMessageObject(messageInput, adminRef, userRef);
+
+                // Send the message
+                await sendMessage(message);
+
+                // Update the chat messages state with the newly sent message
+                setChatMessages(prevMessages => [...prevMessages, message]);
+
+                // Clear the message input field
+                setMessageInput('');
+            } catch (error) {
+                console.error('Error sending message:', error);
+            }
+        }
+    };
+
+
 
     return (
         <ScrollView contentContainerStyle={styles.container}>
@@ -135,7 +165,7 @@ const AdminMessagesScreen = () => {
                                 value={messageInput}
                                 onChangeText={setMessageInput}
                             />
-                            <Button title="Send" onPress={sendMessage} />
+                            <Button title="Send" onPress={handleMessageSend} />
                         </View>
                     </View>
                 </View>
