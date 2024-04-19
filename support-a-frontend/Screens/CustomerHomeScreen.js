@@ -22,6 +22,7 @@ const CustomerHomeScreen = ({ navigation }) => {
         'Photography': 'camera',
         'Personal Trainer': 'run',
         'Fashion': 'clothing',
+        'Tools' : 'tools',
         // Add more category icons as needed
     };
 
