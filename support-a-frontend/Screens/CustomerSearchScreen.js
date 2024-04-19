@@ -8,9 +8,9 @@ import { db } from "../firebase";
 const CustomerSearchScreen = ({ navigation }) => {
     const [userData, setUserData] = useState(null);
     const [services, setServices] = useState([]);
-    const [products, setProducts] = useState([]); // Added products state
+    const [products, setProducts] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
-    const [filteredData, setFilteredData] = useState([]); // Combined filtered services and products
+    const [filteredData, setFilteredData] = useState([]);
 
     const categoryIcons = {
         'Health': 'heart',
@@ -23,11 +23,12 @@ const CustomerSearchScreen = ({ navigation }) => {
         'Videography': 'camera',
         'Photography': 'camera',
         'Personal Trainer': 'run',
-        // Add more icons as needed
+        'Fashion': 'clothing',
+        'Tools': 'tools',
     };
 
     useEffect(() => {
-        const fetchUserData = async () => {
+        const fetchUserDataAndData = async () => {
             const auth = getAuth();
             const user = auth.currentUser;
             if (user) {
@@ -38,53 +39,32 @@ const CustomerSearchScreen = ({ navigation }) => {
                 } else {
                     Alert.alert("Error", "No user data found");
                 }
-            }
-        };
 
-        const fetchData = async () => {
-            try {
-                // Fetch services
+                // Fetch services and products
                 const servicesSnapshot = await getDocs(collection(db, "Services"));
-                const servicesList = servicesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                setServices(servicesList);
+                setServices(servicesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
 
-                // Fetch products
                 const productsSnapshot = await getDocs(collection(db, "ProductService"));
-                const productsList = productsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                setProducts(productsList);
-            } catch (error) {
-                console.error("Error fetching data: ", error);
-                Alert.alert("Error", "Failed to fetch data.");
+                setProducts(productsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
             }
         };
 
-        fetchUserData().catch(console.error);
-        fetchData().catch(console.error);
+        fetchUserDataAndData().catch(console.error);
     }, []);
 
     useEffect(() => {
-        if (searchQuery.trim() !== '') {
-            const queryLowerCase = searchQuery.toLowerCase();
-            const filteredServices = services.filter(service =>
-                service.businessName.toLowerCase().includes(queryLowerCase) ||
-                service.category.toLowerCase().includes(queryLowerCase)
-            );
-            const filteredProducts = products.filter(product =>
-                product.productName.toLowerCase().includes(queryLowerCase) ||
-                product.category.toLowerCase().includes(queryLowerCase)
-            );
-            setFilteredData([...filteredServices, ...filteredProducts]); // Combine and set the filtered data
-        } else {
-            setFilteredData([...services, ...products]); // Combine and set all data when not searching
-        }
+        const queryLowerCase = searchQuery.toLowerCase();
+        const filteredServices = services.filter(service => service.businessName.toLowerCase().includes(queryLowerCase) || service.category.toLowerCase().includes(queryLowerCase));
+        const filteredProducts = products.filter(product => product.productName.toLowerCase().includes(queryLowerCase) || product.category.toLowerCase().includes(queryLowerCase));
+        setFilteredData([...filteredServices, ...filteredProducts]);
     }, [searchQuery, services, products]);
 
     const handleItemClick = (item) => {
-        // Navigate based on the type of item (service or product)
-        if (item.businessName) {
-            navigation.navigate('BookingScreen', { service: item });
-        } else {
+        // Check if the item has a productName to distinguish products from services
+        if (item.productName) {
             navigation.navigate('ProductDetailsScreen', { product: item });
+        } else {
+            navigation.navigate('BookingScreen', { service: item });
         }
     };
 
@@ -93,10 +73,7 @@ const CustomerSearchScreen = ({ navigation }) => {
             <ScrollView style={styles.scrollView}>
                 <View style={styles.header}>
                     <Image source={require('../images/img.png')} style={styles.profilePic} />
-                    <Text style={styles.welcome}>Welcome, {userData ? userData.name : 'User'}</Text>
-                    <TouchableOpacity onPress={() => navigation.navigate('SettingsScreen')}>
-                        <MaterialCommunityIcons name="settings" size={24} color="#4C6854" />
-                    </TouchableOpacity>
+                    <Text style={styles.welcome}>Welcome, {userData ? userData.firstName : 'User'}</Text>
                 </View>
 
                 <TextInput
@@ -105,7 +82,6 @@ const CustomerSearchScreen = ({ navigation }) => {
                     onChangeText={setSearchQuery}
                     style={styles.searchInput}
                 />
-                <Text style={styles.recommendedTitle}>Results</Text>
                 <FlatList
                     data={filteredData}
                     keyExtractor={item => item.id}
@@ -127,29 +103,6 @@ const CustomerSearchScreen = ({ navigation }) => {
                     )}
                 />
             </ScrollView>
-            <View style={styles.tabBarContainer}>
-                <TouchableOpacity style={styles.tabItem} onPress={() => navigation.navigate('CustomerHome')}>
-                    <MaterialCommunityIcons name="home" size={24} color="#4CAF50" />
-                    <Text style={styles.tabTitle}>Home</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.tabItem} onPress={() => navigation.navigate('CustomerSearchScreen')}>
-                    <MaterialCommunityIcons name="magnify" size={24} color="#4CAF50" />
-                    <Text style={styles.tabTitle}>Search</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.tabItem} onPress={() => navigation.navigate('CustomerOrdersScreen')}>
-                    <MaterialCommunityIcons name="format-list-bulleted" size={24} color="#4CAF50" />
-                    <Text style={styles.tabTitle}>Orders</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.tabItem} onPress={() => navigation.navigate('CustomerAppointmentScreen')}>
-                    <MaterialCommunityIcons name="calendar" size={24} color="#4CAF50" />
-                    <Text style={styles.tabTitle}>Appointments</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.tabItem} onPress={() => navigation.navigate('CustomerAccountScreen')}>
-                    <MaterialCommunityIcons name="account" size={24} color="#4CAF50" />
-                    <Text style={styles.tabTitle}>Account</Text>
-                </TouchableOpacity>
-
-            </View>
         </View>
     );
 };
