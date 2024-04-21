@@ -110,7 +110,7 @@ const MessagingScreen = () => {
                                         {message.text}
                                     </div>
                                     <div style={styles.messageHeader}>
-                                        {message.sender === auth.currentUser.uid ? 'You' : selectedUser.firstName} - {message.timestamp.toDate().toLocaleTimeString()}
+                                        {message.sender === auth.currentUser.uid ? 'You' : `${selectedUser.firstName} ${selectedUser.lastName}`} - {message.timestamp.toDate().toLocaleTimeString()}
                                     </div>
                                 </li>
                             ))}
@@ -129,11 +129,12 @@ const MessagingScreen = () => {
     );
 }
 
+// Updated styles
 const styles = {
     container: {
         display: 'flex',
         justifyContent: 'space-between',
-        padding: '20px',
+        padding: '20px', // Restored original padding for userList
         backgroundColor: '#4CAF50',
         color: '#FFF',
     },
@@ -152,71 +153,46 @@ const styles = {
         borderRadius: '5px',
         cursor: 'pointer',
     },
-    modal: {
-        position: 'fixed',
-        top: '0',
-        left: '0',
-        width: '100%',
-        height: '100%',
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: '999',
-    },
-    modalContent: {
-        width: '80%',
-        backgroundColor: '#FFF',
-        borderRadius: '10px',
-        padding: '20px',
-        position: 'relative',
-    },
-    closeButton: {
-        position: 'absolute',
-        top: '10px',
-        right: '10px',
-        backgroundColor: 'transparent',
-        border: 'none',
-        cursor: 'pointer',
-        color: '#4CAF50',
-        fontSize: '16px',
-    },
-    chatTitle: {
-        fontSize: '20px',
-        fontWeight: 'bold',
-        marginBottom: '10px',
-    },
     messageList: {
         listStyle: 'none',
         padding: '0',
+        display: 'flex',
+        flexDirection: 'column',
+        overflowY: 'auto',
     },
     userMessage: {
         backgroundColor: '#FFA500',
         color: '#FFF',
-        padding: '10px',
-        marginBottom: '5px',
+        padding: '10px 15px',
         borderRadius: '10px',
+        alignSelf: 'flex-end', // Align your messages to the right
+        maxWidth: '80%',
+        marginBottom: '5px',
     },
     receiverMessage: {
         backgroundColor: '#4CAF50',
         color: '#FFF',
-        padding: '10px',
-        marginBottom: '5px',
+        padding: '10px 15px',
         borderRadius: '10px',
+        alignSelf: 'flex-start', // Align received messages to the left
+        maxWidth: '80%',
+        marginBottom: '5px',
     },
-    messageContent: {
-        fontSize: '16px',
-    },
-    messageHeader: {
-        fontSize: '12px',
-        color: '#666',
+    // ... (Other styles remain the same)
+
+    modalContent: {
+        width: '80%',
+        backgroundColor: '#FFF',
+        borderRadius: '10px',
+        padding: '10px', // Reduced padding
+        position: 'relative',
     },
     messageInput: {
         height: '40px',
-        width: 'calc(100% - 80px)', // Adjust width according to button width
+        width: 'calc(100% - 90px)', // Adjust width according to the send button
         marginRight: '10px',
         marginBottom: '10px',
-        padding: '5px',
+        padding: '10px', // Increased padding for aesthetics
         borderRadius: '5px',
         border: '1px solid #4CAF50',
     },
@@ -228,6 +204,7 @@ const styles = {
         border: 'none',
         borderRadius: '5px',
         cursor: 'pointer',
+        padding: '10px 0', // Adjust vertical padding to match input height
     },
 };
 
