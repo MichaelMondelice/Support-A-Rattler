@@ -8,7 +8,7 @@ import { db } from "../firebase";
 const CustomerHomeScreen = ({ navigation }) => {
     const [userData, setUserData] = useState(null);
     const [services, setServices] = useState([]);
-    const [products, setProducts] = useState([]); // State to store products
+    const [products, setProducts] = useState([]);
 
     const categoryIcons = {
         'Health': 'heart',
@@ -118,6 +118,10 @@ const CustomerHomeScreen = ({ navigation }) => {
                 <TouchableOpacity style={styles.tabItem} onPress={() => navigation.navigate('CustomerHome')}>
                     <MaterialCommunityIcons name="home" size={24} color="#4CAF50" />
                     <Text style={styles.tabTitle}>Home</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.tabItem} onPress={() => navigation.navigate('AdminMessages')}>
+                    <MaterialCommunityIcons name="message" size={24} color="#4CAF50" />
+                    <Text style={styles.tabTitle}>Messages</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.tabItem} onPress={() => navigation.navigate('CustomerSearchScreen')}>
                     <MaterialCommunityIcons name="magnify" size={24} color="#4CAF50" />
