@@ -61,7 +61,7 @@ const AdminHomeScreen = () => {
 
     const handleAdminMessages = async () => {
         try {
-            navigation.navigate('AdminMessages'); // Use the name you registered in App.js
+            navigation.navigate('Messages'); // Use the name you registered in App.js
         } catch (error) {
             // Handle navigation error
             console.error(error);
