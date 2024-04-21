@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { db, auth } from '../firebase'; // Import Firestore and auth instances
-import { collection, addDoc, query, orderBy, onSnapshot, getDocs, where } from 'firebase/firestore';
+import { db, auth } from '../firebase';
+import { collection, getDoc, doc, getDocs, query, where, addDoc, orderBy, onSnapshot } from 'firebase/firestore';
+import { onAuthStateChanged } from 'firebase/auth';
 
 const MessagingScreen = () => {
     const [users, setUsers] = useState([]);
@@ -10,27 +11,45 @@ const MessagingScreen = () => {
     const [showChat, setShowChat] = useState(false);
 
     useEffect(() => {
-        const fetchUsers = async () => {
-            try {
-                const querySnapshot = await getDocs(collection(db, 'User'));
-                const userList = [];
-                querySnapshot.forEach((doc) => {
-                    const userData = doc.data();
-                    userList.push({ id: doc.id, firstName: userData.firstName, lastName: userData.lastName });
-                });
-                setUsers(userList);
-            } catch (error) {
-                console.error('Error fetching users:', error);
-                // Handle error if needed
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                console.log("Current User UID:", user.uid); // Verify the current user's UID
+                fetchUsersBasedOnRole(user.uid);
+            } else {
+                console.log("No user is signed in.");
             }
-        };
-
-        fetchUsers(); // Fetch users on component mount
-
-        return () => {
-            // Cleanup function
-        };
+        });
     }, []);
+
+    const fetchUsersBasedOnRole = async (userId) => {
+        const userDocRef = doc(db, 'User', userId);
+        const userDoc = await getDoc(userDocRef);
+
+        if (userDoc.exists()) {
+            const currentUserRole = userDoc.data().role;
+            let rolesToShow = [];
+            switch (currentUserRole) {
+                case 'Admin':
+                    rolesToShow = ['Admin', 'Entrepreneur', 'Customer'];
+                    break;
+                case 'Entrepreneur':
+                    rolesToShow = ['Customer', 'Admin'];
+                    break;
+                case 'Customer':
+                    rolesToShow = ['Entrepreneur', 'Admin'];
+                    break;
+                default:
+                    console.log('Unexpected role:', currentUserRole);
+            }
+
+            const usersQuery = query(collection(db, 'User'), where('role', 'in', rolesToShow));
+            const querySnapshot = await getDocs(usersQuery);
+            const fetchedUsers = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            setUsers(fetchedUsers.filter(u => u.id !== userId)); // Exclude the current user from the list
+        } else {
+            console.log('User document not found with the ID:', userId);
+        }
+    };
 
     useEffect(() => {
         if (selectedUser) {
@@ -53,22 +72,19 @@ const MessagingScreen = () => {
         }
     }, [selectedUser]);
 
-    const handleMessageChange = (event) => {
-        setNewMessage(event.target.value);
+    const handleUserSelect = (user) => {
+        setSelectedUser(user);
+        setShowChat(true);
     };
+
+    const handleMessageChange = (event) => setNewMessage(event.target.value);
 
     const handleSendMessage = async () => {
         if (newMessage.trim() !== '' && selectedUser) {
             try {
-                const user = auth.currentUser; // Get the currently authenticated user
-                if (!user) {
-                    console.error('No authenticated user found');
-                    return;
-                }
-
                 await addDoc(collection(db, 'Messages'), {
                     text: newMessage,
-                    sender: user.uid, // Use the authenticated user's ID as the sender
+                    sender: auth.currentUser.uid,
                     receiver: selectedUser.id,
                     timestamp: new Date()
                 });
@@ -79,14 +95,7 @@ const MessagingScreen = () => {
         }
     };
 
-    const handleUserSelect = (user) => {
-        setSelectedUser(user);
-        toggleChat();
-    };
-
-    const toggleChat = () => {
-        setShowChat(!showChat);
-    };
+    const toggleChat = () => setShowChat(!showChat);
 
     return (
         <div style={styles.container}>
@@ -94,7 +103,7 @@ const MessagingScreen = () => {
                 <h3 style={styles.heading}>Users</h3>
                 {users.map((user) => (
                     <div key={user.id} style={styles.userBox} onClick={() => handleUserSelect(user)}>
-                        <span style={{ color: '#000' }}>{user.firstName} {user.lastName}</span>
+                        <span>{user.firstName} {user.lastName} ({user.role})</span>
                     </div>
                 ))}
             </div>
@@ -104,16 +113,17 @@ const MessagingScreen = () => {
                         <button style={styles.closeButton} onClick={() => setSelectedUser(null)}>Close</button>
                         <h3 style={styles.chatTitle}>Chat with {selectedUser.firstName} {selectedUser.lastName}</h3>
                         <ul style={styles.messageList}>
-                            {messages.map((message) => (
-                                <li key={message.id} style={message.sender === auth.currentUser.uid ? styles.userMessage : styles.receiverMessage}>
-                                    <div style={styles.messageContent}>
-                                        {message.text}
-                                    </div>
-                                    <div style={styles.messageHeader}>
-                                        {message.sender === auth.currentUser.uid ? 'You' : `${selectedUser.firstName} ${selectedUser.lastName}`} - {message.timestamp.toDate().toLocaleTimeString()}
-                                    </div>
-                                </li>
-                            ))}
+                            {messages.map((message) => {
+                                console.log("Message Sender:", message.sender, "Current User UID:", auth.currentUser.uid); // Debug message sender ID
+                                return (
+                                    <li key={message.id} style={message.sender === auth.currentUser.uid ? styles.userMessage : styles.receiverMessage}>
+                                        <div style={styles.messageContent}>{message.text}</div>
+                                        <div style={styles.messageHeader}>
+                                            {message.sender === auth.currentUser.uid ? 'You' : `${selectedUser.firstName} ${selectedUser.lastName}`} - {message.timestamp.toDate().toLocaleTimeString()}
+                                        </div>
+                                    </li>
+                                );
+                            })}
                         </ul>
                         <input
                             type="text"
@@ -127,14 +137,14 @@ const MessagingScreen = () => {
             )}
         </div>
     );
-}
+};
 
-// Updated styles
+// Add your CSS styles as needed
 const styles = {
     container: {
         display: 'flex',
         justifyContent: 'space-between',
-        padding: '20px', // Restored original padding for userList
+        padding: '20px',
         backgroundColor: '#4CAF50',
         color: '#FFF',
     },
@@ -145,6 +155,7 @@ const styles = {
         fontSize: '20px',
         fontWeight: 'bold',
         marginBottom: '10px',
+        color: "#000"
     },
     userBox: {
         padding: '10px',
@@ -152,6 +163,33 @@ const styles = {
         backgroundColor: '#FFF',
         borderRadius: '5px',
         cursor: 'pointer',
+        color: "#000"
+    },
+    modalContent: {
+        width: '80%',
+        backgroundColor: '#FFF',
+        borderRadius: '10px',
+        padding: '10px',
+        position: 'relative',
+    },
+    messageInput: {
+        height: '40px',
+        width: 'calc(100% - 90px)',
+        marginRight: '10px',
+        marginBottom: '10px',
+        padding: '10px',
+        borderRadius: '5px',
+        border: '1px solid #4CAF50',
+    },
+    sendButton: {
+        height: '40px',
+        width: '80px',
+        backgroundColor: '#4CAF50',
+        color: '#FFF',
+        border: 'none',
+        borderRadius: '5px',
+        cursor: 'pointer',
+        padding: '10px 0',
     },
     messageList: {
         listStyle: 'none',
@@ -165,7 +203,7 @@ const styles = {
         color: '#FFF',
         padding: '10px 15px',
         borderRadius: '10px',
-        alignSelf: 'flex-end', // Align your messages to the right
+        alignSelf: 'flex-end',
         maxWidth: '80%',
         marginBottom: '5px',
     },
@@ -174,37 +212,9 @@ const styles = {
         color: '#FFF',
         padding: '10px 15px',
         borderRadius: '10px',
-        alignSelf: 'flex-start', // Align received messages to the left
+        alignSelf: 'flex-start',
         maxWidth: '80%',
         marginBottom: '5px',
-    },
-    // ... (Other styles remain the same)
-
-    modalContent: {
-        width: '80%',
-        backgroundColor: '#FFF',
-        borderRadius: '10px',
-        padding: '10px', // Reduced padding
-        position: 'relative',
-    },
-    messageInput: {
-        height: '40px',
-        width: 'calc(100% - 90px)', // Adjust width according to the send button
-        marginRight: '10px',
-        marginBottom: '10px',
-        padding: '10px', // Increased padding for aesthetics
-        borderRadius: '5px',
-        border: '1px solid #4CAF50',
-    },
-    sendButton: {
-        height: '40px',
-        width: '80px',
-        backgroundColor: '#4CAF50',
-        color: '#FFF',
-        border: 'none',
-        borderRadius: '5px',
-        cursor: 'pointer',
-        padding: '10px 0', // Adjust vertical padding to match input height
     },
 };
 
