@@ -75,7 +75,7 @@ const EntrepreneurHomeScreen = ({ navigation }) => {
                 <TouchableOpacity style={styles.sidebarItem} onPress={() => navigation.navigate('Analytics')}>
                     <Text style={styles.sidebarText}>Analytics</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.sidebarItem} onPress={() => navigation.navigate('Messages')}>
+                <TouchableOpacity style={styles.sidebarItem} onPress={() => navigation.navigate('AdminMessages')}>
                     <Text style={styles.sidebarText}>Messages</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.sidebarItem} onPress={() => navigation.navigate('SettingsScreen')}>
