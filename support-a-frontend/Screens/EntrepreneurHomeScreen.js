@@ -3,7 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, Image, StyleSheet, ScrollView,
 import { MaterialIcons } from '@expo/vector-icons';
 import { ProgressChart } from 'react-native-chart-kit';
 import { getAuth } from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
+import { collection, query, orderBy, limit, getDocs } from "firebase/firestore";
 import { db } from "../firebase";
 
 const screenWidth = Dimensions.get('window').width;
@@ -30,33 +30,25 @@ const progressChartData = {
 };
 
 const EntrepreneurHomeScreen = ({ navigation }) => {
-    const [recentOrders, setRecentOrders] = useState([
-        { id: '1', product: 'Product A', amount: 3, total: 150 },
-        { id: '2', product: 'Product B', amount: 1, total: 50 },
-        { id: '3', product: 'Product C', amount: 2, total: 100 },
-    ]);
-    const [userData, setUserData] = useState(null);
+    const [recentOrders, setRecentOrders] = useState([]);
 
     useEffect(() => {
-        const auth = getAuth();
-        const user = auth.currentUser;
-        if (user) {
-            const fetchData = async () => {
-                const userRef = doc(db, "users", user.uid);
-                try {
-                    const docSnap = await getDoc(userRef);
-                    if (docSnap.exists()) {
-                        setUserData(docSnap.data());
-                        setRecentOrders(docSnap.data().orders || recentOrders);
-                    } else {
-                        console.error("No user data found");
-                    }
-                } catch (error) {
-                    console.error("Failed to fetch user data:", error);
-                }
-            };
-            fetchData();
-        }
+        const fetchRecentOrders = async () => {
+            try {
+                const ordersRef = collection(db, 'Order');
+                const q = query(ordersRef, orderBy("OrderDate", "desc"), limit(3));
+                const querySnapshot = await getDocs(q);
+                const ordersList = querySnapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                }));
+                setRecentOrders(ordersList);
+            } catch (error) {
+                console.error('Error fetching recent orders:', error);
+            }
+        };
+
+        fetchRecentOrders();
     }, []);
 
     return (
@@ -84,7 +76,7 @@ const EntrepreneurHomeScreen = ({ navigation }) => {
             </View>
             <ScrollView style={styles.mainContent}>
                 <TextInput style={styles.searchBar} placeholder="Search...." placeholderTextColor="#666" />
-                <Text style={styles.header}>Welcome, {userData ? userData.firstName : 'User'}</Text>
+                <Text style={styles.header}>Welcome, Entrepreneur</Text>
                 <ProgressChart
                     data={progressChartData}
                     width={screenWidth * 0.9}
@@ -98,9 +90,9 @@ const EntrepreneurHomeScreen = ({ navigation }) => {
                     <Text style={styles.sectionTitle}>Recent Orders</Text>
                     {recentOrders.map(order => (
                         <View key={order.id} style={styles.orderItem}>
-                            <Text>{order.product}</Text>
-                            <Text>Quantity: {order.amount}</Text>
-                            <Text>Total: ${order.total}</Text>
+                            <Text>Product: {order.id}</Text>
+                            <Text>Quantity: {order.Quantity}</Text>
+                            <Text>Total: ${order.TotalPrice}</Text>
                         </View>
                     ))}
                 </View>
