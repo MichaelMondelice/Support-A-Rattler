@@ -14,24 +14,28 @@ const ProductDetailsScreen = ({ route }) => {
         const fetchReviews = async () => {
             const reviewsQuery = query(collection(db, "Review"), where("ProductID", "==", product.id));
             const querySnapshot = await getDocs(reviewsQuery);
-            const loadedReviews = [];
-            console.log(`Fetched ${querySnapshot.docs.length} reviews for ProductID: ${product.id}`); // Debugging line
-            for (const doc of querySnapshot.docs) {
-                const reviewData = doc.data();
-                const userRef = doc(db, "User", reviewData.CustomerID);
-                const userData = await getDoc(userRef);
-                if (userData.exists()) {
-                    loadedReviews.push({
-                        id: doc.id,
-                        comment: reviewData.Comment,
-                        rating: reviewData.Rating,
-                        customerEmail: userData.data().email,
-                    });
-                } else {
-                    console.error("User data does not exist for CustomerID:", reviewData.CustomerID);
-                }
+            if (!querySnapshot.empty) {
+                const reviewDocs = querySnapshot.docs;
+                const reviewsWithUser = await Promise.all(reviewDocs.map(async (reviewDoc) => {
+                    const reviewData = reviewDoc.data();
+                    const userRef = doc(db, "User", reviewData.CustomerID);
+                    const userData = await getDoc(userRef);
+                    if (userData.exists()) {
+                        return {
+                            id: reviewDoc.id,
+                            comment: reviewData.Comment,
+                            rating: reviewData.Rating,
+                            customerName: userData.data().name // Ensuring this field matches exactly what's in Firestore
+                        };
+                    } else {
+                        console.error("User data does not exist for CustomerID:", reviewData.CustomerID);
+                        return null; // Skip adding this review
+                    }
+                }));
+                setReviews(reviewsWithUser.filter(review => review !== null)); // Update state with loaded reviews
+            } else {
+                console.log("No reviews found for ProductID:", product.id);
             }
-            setReviews(loadedReviews);
         };
 
         fetchReviews().catch(error => {
@@ -119,23 +123,27 @@ const ProductDetailsScreen = ({ route }) => {
                 />
                 <Button title="Submit Review" onPress={handleReviewSubmit} color="#4CAF50" />
                 <Text style={styles.reviewsHeader}>Reviews</Text>
-                <FlatList
-                    data={reviews}
-                    keyExtractor={item => item.id}
-                    renderItem={({ item }) => (
-                        <View style={styles.reviewItem}>
-                            <Text style={styles.reviewText}>Rating: {item.rating}, Comment: {item.comment}</Text>
-                            <Text style={styles.reviewText}>By: {item.customerEmail}</Text>
-                        </View>
-                    )}
-                />
+                {reviews.length > 0 ? (
+                    <FlatList
+                        data={reviews}
+                        keyExtractor={item => item.id.toString()}
+                        renderItem={({ item }) => (
+                            <View style={styles.reviewItem}>
+                                <Text style={styles.reviewText}>Rating: {item.rating}</Text>
+                                <Text style={styles.reviewText}>Comment: {item.comment}</Text>
+                                <Text style={styles.reviewText}>By: {item.customerName}</Text>
+                            </View>
+                        )}
+                    />
+                ) : (
+                    <Text style={styles.reviewText}>No reviews yet.</Text>
+                )}
             </View>
         </ScrollView>
     );
 };
 
 const styles = StyleSheet.create({
-    // Add your existing styles here
     container: {
         padding: 20,
         backgroundColor: '#DFF2E3',
