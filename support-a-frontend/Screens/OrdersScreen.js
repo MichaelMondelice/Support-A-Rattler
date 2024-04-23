@@ -114,6 +114,9 @@ const OrdersScreen = () => {
                         <TouchableOpacity onPress={() => updateOrderStatus(item.id, 'Order Complete')} style={styles.button}>
                             <Text>Mark as Order Complete</Text>
                         </TouchableOpacity>
+                        <TouchableOpacity onPress={() => updateOrderStatus(item.id, 'Order Canceled')} style={styles.button}>
+                            <Text>Mark as Order Canceled</Text>
+                        </TouchableOpacity>
                     </View>
                 )}
             />

@@ -98,6 +98,7 @@ const EntrepreneurHomeScreen = ({ navigation }) => {
                             <Text>Product: {order.id}</Text>
                             <Text>Quantity: {order.Quantity}</Text>
                             <Text>Total: ${order.TotalPrice}</Text>
+                            <Text>Status: {order.Status}</Text>
                         </View>
                     ))}
                 </View>

@@ -42,7 +42,7 @@ const CustomerAppointmentScreen = () => {
         fetchAppointments();
     }, []);
 
-    const handleDeleteAppointment = async (appointmentId) => {
+   /* const handleDeleteAppointment = async (appointmentId) => {
         try {
             await deleteDoc(doc(db, "AppointmentsBooked", appointmentId));
             setAppointments(appointments.filter(appointment => appointment.id !== appointmentId));
@@ -51,8 +51,27 @@ const CustomerAppointmentScreen = () => {
             console.error("Error deleting appointment: ", error);
             Alert.alert("Error", "Failed to delete appointment.");
         }
-    };
+    };*/
 
+    // Adjust function to cancel appointment instead of deleting
+    const handleCancelAppointment = async (appointmentId) => {
+        const appointmentRef = doc(db, "AppointmentsBooked", appointmentId);
+        try {
+            await updateDoc(appointmentRef, {
+                status: "Canceled" // Adding a new status field to indicate cancellation
+            });
+            const updatedAppointments = appointments.map(appointment => {
+                if (appointment.id === appointmentId) {
+                    return { ...appointment, status: "Canceled" };
+                }
+                return appointment;
+            });
+            setAppointments(updatedAppointments);
+        } catch (error) {
+            console.error("Error canceling appointment: ", error);
+            Alert.alert("Error", "Failed to cancel appointment.");
+        }
+    };
     return (
         <View style={styles.container}>
             <FlatList
@@ -63,8 +82,9 @@ const CustomerAppointmentScreen = () => {
                         <Text style={styles.appointmentText}>Business Name: {item.businessName}</Text>
                         <Text style={styles.appointmentText}>Category: {item.category}</Text>
                         <Text style={styles.appointmentText}>Time: {item.time}</Text>
-                        <TouchableOpacity style={styles.deleteButton} onPress={() => handleDeleteAppointment(item.id)}>
-                            <Text style={styles.deleteButtonText}>Delete</Text>
+                        <Text style={styles.appointmentText}>Status: {item.status}</Text>
+                        <TouchableOpacity style={styles.deleteButton} onPress={() => handleCancelAppointment(item.id)}>
+                            <Text style={styles.deleteButtonText}>Cancel</Text>
                         </TouchableOpacity>
                     </View>
                 )}
