@@ -26,6 +26,7 @@ import CustomerAccountScreen from './Screens/CustomerAccountScreen';
 import BookingScreen from "./Screens/BookingScreen";
 import BookingConfirmationScreen from './Screens/BookingConfirmationScreen';
 import ProductDetailsScreen from './Screens/ProductDetailsScreen';
+import EntrepreneurAnalyticsScreen from "./Screens/EntrepreneurAnalyticsScreen";
 
 
 
@@ -50,6 +51,7 @@ export default function App() {
                 <Stack.Screen name="EntrepreneurLogin" component={EntrepreneurLoginScreen} options={{ title: 'Entrepreneur Login' }} />
                 <Stack.Screen name="EntrepreneurHome" component={EntrepreneurHomeScreen} options={{ title: 'Entrepreneur Home' }} />
                 <Stack.Screen name="EntrepreneurSignUp" component={EntrepreneurSignUpScreen} options={{ title: 'Entrepreneur Sign Up' }} />
+                <Stack.Screen name="EntrepreneurAnalytics" component={EntrepreneurAnalyticsScreen} options={{ title: 'Entrepreneur Analytics' }} />
                 <Stack.Screen name="SettingsScreen" component={SettingsScreen} options={{ title: 'Settings Screen' }} />
                 <Stack.Screen name="OrdersScreen" component={OrdersScreen} options={{ title: 'Orders Screen' }} />
                 <Stack.Screen name="ServicesProducts" component={ServicesProductsScreen} options={{ title: 'Services/Products' }} />

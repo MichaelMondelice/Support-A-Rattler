@@ -64,7 +64,7 @@ const EntrepreneurHomeScreen = ({ navigation }) => {
                 <TouchableOpacity style={styles.sidebarItem} onPress={() => navigation.navigate('ServicesProducts')}>
                     <Text style={styles.sidebarText}>Services/Products</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.sidebarItem} onPress={() => navigation.navigate('Analytics')}>
+                <TouchableOpacity style={styles.sidebarItem} onPress={() => navigation.navigate('EntrepreneurAnalytics')}>
                     <Text style={styles.sidebarText}>Analytics</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.sidebarItem} onPress={() => navigation.navigate('Messages')}>
@@ -75,7 +75,6 @@ const EntrepreneurHomeScreen = ({ navigation }) => {
                 </TouchableOpacity>
             </View>
             <ScrollView style={styles.mainContent}>
-                <TextInput style={styles.searchBar} placeholder="Search...." placeholderTextColor="#666" />
                 <Text style={styles.header}>Welcome, Entrepreneur</Text>
                 <ProgressChart
                     data={progressChartData}
