@@ -1,18 +1,28 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, Button } from 'react-native';
-import { collection, getDocs, doc, updateDoc } from 'firebase/firestore';
-import { db } from '../firebase'; // Ensure this is the correct path to your Firebase configuration
+import { collection, getDocs, doc, updateDoc, query, where } from 'firebase/firestore';
+import { db, auth } from '../firebase'; // Ensure this includes the auth module for current user
 
 const OrdersScreen = () => {
     const [orders, setOrders] = useState([]);
     const [displayedOrders, setDisplayedOrders] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
+    const currentUser = auth.currentUser; // Assumes you have authentication setup
 
     useEffect(() => {
         const fetchOrders = async () => {
             try {
-                const querySnapshot = await getDocs(collection(db, 'Order'));
-                const fetchedOrders = querySnapshot.docs.map(doc => ({
+                // First, get all ProductService entries for the logged-in user
+                const productServiceRef = collection(db, 'ProductService');
+                const prodQuery = query(productServiceRef, where("userId", "==", currentUser.uid));
+                const prodSnapshot = await getDocs(prodQuery);
+                const userProductIds = prodSnapshot.docs.map(doc => doc.id);
+
+                // Then, get all Orders that match the ProductService IDs created by the user
+                const ordersRef = collection(db, 'Order');
+                const orderQuery = query(ordersRef, where("ProdServID", "in", userProductIds));
+                const orderSnapshot = await getDocs(orderQuery);
+                const fetchedOrders = orderSnapshot.docs.map(doc => ({
                     id: doc.id,
                     ...doc.data()
                 }));
@@ -23,8 +33,10 @@ const OrdersScreen = () => {
             }
         };
 
-        fetchOrders();
-    }, []);
+        if (currentUser) {
+            fetchOrders();
+        }
+    }, [currentUser]);
 
     const handleSearch = () => {
         const query = searchQuery.trim().toLowerCase();
@@ -119,10 +131,6 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.22,
         shadowRadius: 2.22,
         elevation: 3,
-    },
-    cardDetail: {
-        fontSize: 14,
-        marginBottom: 5,
     },
     button: {
         marginTop: 5,
