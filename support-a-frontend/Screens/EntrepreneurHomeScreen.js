@@ -1,32 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Image, StyleSheet, ScrollView, Dimensions } from 'react-native';
-import { MaterialIcons } from '@expo/vector-icons';
-import { ProgressChart } from 'react-native-chart-kit';
-import { getAuth } from "firebase/auth";
+import { View, Text, Image, TouchableOpacity, StyleSheet, ScrollView, Dimensions } from 'react-native';
 import { collection, query, orderBy, limit, getDocs } from "firebase/firestore";
 import { db } from "../firebase";
 
 const screenWidth = Dimensions.get('window').width;
 
-const data = {
-    labels: ['January', 'February', 'March', 'April', 'May', 'June'],
-    datasets: [{
-        data: [20, 45, 28, 80, 99, 43],
-        color: (opacity = 1) => `rgba(134, 65, 244, ${opacity})`,
-        strokeWidth: 2
-    }]
-};
-
-const chartConfig = {
-    backgroundGradientFrom: '#DFF2E3',
-    backgroundGradientTo: '#DFF2E3',
-    decimalPlaces: 2,
-    color: (opacity = 1) => `rgba(76, 175, 80, ${opacity})`,
-};
-
 const progressChartData = {
-    labels: ["Sales", "Expenses", "Profit"],
-    data: [0.6, 0.3, 0.8]
+    labels: ["Order Received", "Payment Received", "Order Confirmed", "Order Shipped", "Order Complete"],
+    data: [5, 4, 3, 2, 1] // Example quantities, you can replace these with your actual data
 };
 
 const EntrepreneurHomeScreen = ({ navigation }) => {
@@ -76,15 +57,21 @@ const EntrepreneurHomeScreen = ({ navigation }) => {
             </View>
             <ScrollView style={styles.mainContent}>
                 <Text style={styles.header}>Welcome, Entrepreneur</Text>
-                <ProgressChart
-                    data={progressChartData}
-                    width={screenWidth * 0.9}
-                    height={220}
-                    strokeWidth={16}
-                    radius={32}
-                    chartConfig={chartConfig}
-                    hideLegend={false}
-                />
+                <View style={styles.progressTableContainer}>
+                    <Image source={require('../images/logo.png')} style={styles.logoBackground} />
+                    <View style={styles.progressTable}>
+                        <View style={styles.tableHeaderRow}>
+                            <Text style={[styles.tableHeader, styles.headerText]}>Status</Text>
+                            <Text style={[styles.tableHeader, styles.headerText]}>Quantity</Text>
+                        </View>
+                        {progressChartData.labels.map((label, index) => (
+                            <View key={index} style={styles.tableRow}>
+                                <Text style={styles.statusText}>{label}</Text>
+                                <Text style={styles.quantityText}>{progressChartData.data[index]}</Text>
+                            </View>
+                        ))}
+                    </View>
+                </View>
                 <View style={styles.section}>
                     <Text style={styles.sectionTitle}>Recent Orders</Text>
                     {recentOrders.map(order => (
@@ -134,14 +121,6 @@ const styles = StyleSheet.create({
         padding: 20,
         backgroundColor: '#FFFFFF',
     },
-    searchBar: {
-        height: 40,
-        backgroundColor: '#C8E6C9',
-        borderRadius: 20,
-        paddingHorizontal: 10,
-        marginBottom: 20,
-        color: '#4C6854',
-    },
     header: {
         fontSize: 24,
         fontWeight: 'bold',
@@ -162,6 +141,61 @@ const styles = StyleSheet.create({
         borderRadius: 6,
         padding: 10,
         marginTop: 10,
+    },
+    progressTableContainer: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    logoBackground: {
+        position: 'absolute',
+        width: '100%',
+        height: '100%',
+        resizeMode: 'cover',
+        opacity: 0.2, // Adjust opacity as needed
+    },
+    progressTable: {
+        backgroundColor: '#C8E6C9',
+        borderRadius: 20,
+        padding: 20,
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 3,
+        },
+        shadowOpacity: 0.27,
+        shadowRadius: 4.65,
+        elevation: 6,
+        width: '80%', // Set width to 80% of parent container
+    },
+    tableHeaderRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginBottom: 16,
+    },
+    tableHeader: {
+        fontWeight: 'bold',
+    },
+    headerText: {
+        flex: 1,
+        textAlign: 'left',
+    },
+    tableRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        borderBottomWidth: 1,
+        borderBottomColor: '#fff', // Adjusted to match the background color
+        paddingVertical: 8,
+    },
+    statusText: {
+        flex: 1,
+        textAlign: 'left',
+        color: '#333', // Adjusted to match the page style
+    },
+    quantityText: {
+        flex: 1,
+        textAlign: 'right',
+        color: '#333', // Adjusted to match the page style
     },
 });
 
