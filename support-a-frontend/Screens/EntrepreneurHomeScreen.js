@@ -1,21 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet, ScrollView, Dimensions } from 'react-native';
-import { collection, query, orderBy, limit, getDocs } from "firebase/firestore";
+import { collection, getDocs, query, orderBy, limit } from "firebase/firestore";
 import { db } from "../firebase";
 
 const screenWidth = Dimensions.get('window').width;
 
-const progressChartData = {
-    labels: ["Order Received", "Payment Received", "Order Confirmed", "Order Shipped", "Order Complete"],
-    data: [5, 4, 3, 2, 1] // Example quantities, you can replace these with your actual data
-};
-
 const EntrepreneurHomeScreen = ({ navigation }) => {
     const [recentOrders, setRecentOrders] = useState([]);
+    const [progressChartData, setProgressChartData] = useState({
+        labels: ["Order Received", "Payment Received", "Order Confirmed", "Order Shipped", "Order Complete"],
+        data: [0, 0, 0, 0, 0] // Initialize quantities to 0
+    });
 
     useEffect(() => {
-        const fetchRecentOrders = async () => {
+        const fetchData = async () => {
             try {
+                // Fetch recent orders
                 const ordersRef = collection(db, 'Order');
                 const q = query(ordersRef, orderBy("OrderDate", "desc"), limit(3));
                 const querySnapshot = await getDocs(q);
@@ -24,12 +24,31 @@ const EntrepreneurHomeScreen = ({ navigation }) => {
                     ...doc.data()
                 }));
                 setRecentOrders(ordersList);
+
+                // Fetch orders status and update progress chart data
+                const allOrdersSnapshot = await getDocs(ordersRef);
+                const allOrdersList = allOrdersSnapshot.docs.map(doc => doc.data());
+                const statusCounts = {
+                    "Order Received": 0,
+                    "Payment Received": 0,
+                    "Order Confirmed": 0,
+                    "Order Shipped": 0,
+                    "Order Complete": 0
+                };
+                allOrdersList.forEach(order => {
+                    statusCounts[order.Status]++;
+                });
+                const updatedChartData = {
+                    ...progressChartData,
+                    data: Object.values(statusCounts)
+                };
+                setProgressChartData(updatedChartData);
             } catch (error) {
-                console.error('Error fetching recent orders:', error);
+                console.error('Error fetching data:', error);
             }
         };
 
-        fetchRecentOrders();
+        fetchData();
     }, []);
 
     return (
