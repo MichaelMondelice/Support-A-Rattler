@@ -46,7 +46,7 @@ const AdminReportsScreen = () => {
         const products = querySnapshot.docs.map(doc => ({
             ...doc.data(),
             id: doc.id,
-            orders: [] // This will be populated on button click
+            orders: []
         }));
         setProducts(products);
     };
@@ -56,7 +56,7 @@ const AdminReportsScreen = () => {
         const services = querySnapshot.docs.map(doc => ({
             ...doc.data(),
             id: doc.id,
-            appointments: [] // This will be populated on button click
+            appointments: []
         }));
         setServices(services);
     };
@@ -64,11 +64,19 @@ const AdminReportsScreen = () => {
     const handleProductClick = async (product) => {
         const orderQuery = query(collection(db, 'Order'), where('ProdServID', '==', product.id));
         const orderData = await getDocs(orderQuery);
-        const orders = orderData.docs.map(doc => ({
-            productName: doc.data().ProductName,
-            quantity: doc.data().Quantity,
-            status: doc.data().Status
-        }));
+        const usersSnapshot = await getDocs(collection(db, 'User'));
+        const users = usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        const orders = orderData.docs.map(doc => {
+            const customer = users.find(user => user.id === doc.data().CustomerID);
+            return {
+                productName: doc.data().ProductName,
+                quantity: doc.data().Quantity,
+                status: doc.data().Status,
+                firstName: customer ? customer.firstName : 'Unknown',
+                lastName: customer ? customer.lastName : 'Unknown',
+                email: customer ? customer.email : 'No email'
+            };
+        });
         setSelectedItem({ ...product, orders });
     };
 
@@ -85,7 +93,7 @@ const AdminReportsScreen = () => {
 
     const changeTab = (tab) => {
         setActiveTab(tab);
-        setSelectedItem(null); // Reset selected item when changing tabs
+        setSelectedItem(null);
     };
 
     const renderTabContent = () => {
@@ -133,8 +141,11 @@ const AdminReportsScreen = () => {
                         <Text style={styles.detailHeader}>{item.productName || item.customerName || item.serviceName}</Text>
                         {item.quantity && <Text style={styles.detailText}>Quantity: {item.quantity}</Text>}
                         {item.status && <Text style={styles.detailText}>Status: {item.status}</Text>}
+                        {item.customerID && <Text style={styles.detailText}>Customer ID: {item.customerID}</Text>}
                         {item.customerEmail && <Text style={styles.detailText}>Customer Email: {item.customerEmail}</Text>}
                         {item.time && <Text style={styles.detailText}>Time: {item.time}</Text>}
+                        {item.firstName && <Text style={styles.detailText}>Customer: {item.firstName} {item.lastName}</Text>}
+                        {item.email && <Text style={styles.detailText}>Email: {item.email}</Text>}
                     </View>
                 )}
                 keyExtractor={(item, index) => index.toString()}
