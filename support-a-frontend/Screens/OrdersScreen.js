@@ -1,18 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, Button } from 'react-native';
-import { collection, getDocs, doc, updateDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, updateDoc, query, where } from 'firebase/firestore';
 import { db } from '../firebase'; // Ensure this is the correct path to your Firebase configuration
 
 const OrdersScreen = () => {
     const [orders, setOrders] = useState([]);
     const [displayedOrders, setDisplayedOrders] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
+    const currentUserID = 'dN55dlhpGTdFE6e3vfBRDA0Np4k2'; // Example userID
 
     useEffect(() => {
         const fetchOrders = async () => {
             try {
-                const querySnapshot = await getDocs(collection(db, 'Order'));
-                const fetchedOrders = querySnapshot.docs.map(doc => ({
+                // Fetch the entrepreneur's product IDs
+                const productServiceQuery = query(collection(db, 'ProductService'), where('userId', '==', currentUserID));
+                const productServiceSnapshot = await getDocs(productServiceQuery);
+                const productServiceIds = productServiceSnapshot.docs.map(doc => doc.id);
+
+                // Fetch orders that are related to the entrepreneur's products
+                const orderQuery = query(collection(db, 'Order'), where('ProdServID', 'in', productServiceIds));
+                const orderSnapshot = await getDocs(orderQuery);
+                const fetchedOrders = orderSnapshot.docs.map(doc => ({
                     id: doc.id,
                     ...doc.data()
                 }));
@@ -31,7 +39,7 @@ const OrdersScreen = () => {
         const filtered = orders.filter(order =>
             (order.id.toLowerCase().includes(query)) ||
             (order.Status.toLowerCase().includes(query)) ||
-            order.Quantity.toString().includes(searchQuery)  // Correct way to include numeric search
+            order.Quantity.toString().includes(searchQuery)
         );
         setDisplayedOrders(filtered);
     };
