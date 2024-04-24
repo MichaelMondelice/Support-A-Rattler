@@ -3,7 +3,7 @@ import { View, Text, TextInput, Button, ScrollView, StyleSheet, Alert, FlatList 
 import { db, auth } from "../firebase";
 import { doc, getDoc, addDoc, collection, serverTimestamp, query, where, getDocs } from "firebase/firestore";
 
-const ProductDetailsScreen = ({ route }) => {
+const ProductDetailsScreen = ({ navigation, route }) => {
     const { product } = route.params;
     const [quantity, setQuantity] = useState(1);
     const [review, setReview] = useState('');
@@ -14,28 +14,20 @@ const ProductDetailsScreen = ({ route }) => {
         const fetchReviews = async () => {
             const reviewsQuery = query(collection(db, "Review"), where("ProductID", "==", product.id));
             const querySnapshot = await getDocs(reviewsQuery);
-            if (!querySnapshot.empty) {
-                const reviewDocs = querySnapshot.docs;
-                const reviewsWithUser = await Promise.all(reviewDocs.map(async (reviewDoc) => {
-                    const reviewData = reviewDoc.data();
-                    const userRef = doc(db, "User", reviewData.CustomerID);
-                    const userData = await getDoc(userRef);
-                    if (userData.exists()) {
-                        return {
-                            id: reviewDoc.id,
-                            comment: reviewData.Comment,
-                            rating: reviewData.Rating,
-                            customerName: userData.data().name // Ensuring this field matches exactly what's in Firestore
-                        };
-                    } else {
-                        console.error("User data does not exist for CustomerID:", reviewData.CustomerID);
-                        return null; // Skip adding this review
-                    }
-                }));
-                setReviews(reviewsWithUser.filter(review => review !== null)); // Update state with loaded reviews
-            } else {
-                console.log("No reviews found for ProductID:", product.id);
-            }
+            const reviewsWithUser = await Promise.all(querySnapshot.docs.map(async reviewDoc => {
+                const reviewData = reviewDoc.data();
+                const userRef = doc(db, "User", reviewData.CustomerID);
+                const userSnap = await getDoc(userRef);
+                const fullName = userSnap.exists() ? `${userSnap.data().firstName} ${userSnap.data().lastName}` : "Unnamed User";
+                return {
+                    id: reviewDoc.id,
+                    comment: reviewData.Comment,
+                    rating: reviewData.Rating,
+                    customerName: fullName,
+                    displayStars: getStars(reviewData.Rating)
+                };
+            }));
+            setReviews(reviewsWithUser);
         };
 
         fetchReviews().catch(error => {
@@ -43,6 +35,12 @@ const ProductDetailsScreen = ({ route }) => {
             Alert.alert("Error", "Failed to fetch reviews.");
         });
     }, [product.id]);
+
+    const getStars = (rating) => (
+        <Text style={{ color: '#FFD700', fontSize: 18 }}>
+            {'★'.repeat(rating) + '☆'.repeat(5 - rating)}
+        </Text>
+    );
 
     const handleOrder = async () => {
         if (!auth.currentUser) {
@@ -60,7 +58,7 @@ const ProductDetailsScreen = ({ route }) => {
                 Status: "Payment Received",
                 TotalPrice: totalPrice
             });
-            Alert.alert("Success", "Your order has been placed.");
+            navigation.navigate('Confirmation', { message: "Your order has been placed \nThank you for shopping with Support-A-Rattler!!" });
         } catch (error) {
             console.error("Order Error:", error);
             Alert.alert("Error", "Failed to place order.");
@@ -68,8 +66,8 @@ const ProductDetailsScreen = ({ route }) => {
     };
 
     const handleReviewSubmit = async () => {
-        if (!auth.currentUser) {
-            Alert.alert("Error", "You must be signed in to submit a review.");
+        if (rating < 1 || rating > 5) {
+            Alert.alert("Invalid Rating", "Please enter a rating between 1 and 5.");
             return;
         }
         try {
@@ -82,7 +80,7 @@ const ProductDetailsScreen = ({ route }) => {
             });
             setReview('');
             setRating(0);
-            Alert.alert("Success", "Review submitted successfully.");
+            navigation.navigate('Confirmation', { message: "Your Review has been Submitted \nwSupport-A-Rattler Appreciates Your Feedback!!" });
         } catch (error) {
             console.error("Review Submission Error:", error);
             Alert.alert("Error", "Failed to submit review.");
@@ -99,11 +97,17 @@ const ProductDetailsScreen = ({ route }) => {
             <View style={styles.orderSection}>
                 <TextInput
                     style={styles.quantityInput}
-                    value={quantity.toString()}
-                    onChangeText={text => setQuantity(Number(text))}
+                    value={quantity}
+                    onChangeText={text => setQuantity(text.replace(/[^0-9]/g, ''))} // Ensure only numbers can be entered
+                    placeholder="0"
                     keyboardType="numeric"
                 />
-                <Button title="Place Order" onPress={handleOrder} color="#4CAF50" />
+                <Button
+                    title="Place Order"
+                    onPress={handleOrder}
+                    color="#4CAF50"
+                    disabled={!quantity} // Disable button if quantity is zero or not set
+                />
             </View>
 
             <View style={styles.reviewSection}>
@@ -117,7 +121,7 @@ const ProductDetailsScreen = ({ route }) => {
                 <TextInput
                     style={styles.ratingInput}
                     value={rating.toString()}
-                    onChangeText={text => setRating(Number(text))}
+                    onChangeText={text => setRating(Math.max(1, Math.min(5, Number(text))))}
                     placeholder="Rating (1-5)"
                     keyboardType="numeric"
                 />
@@ -129,7 +133,7 @@ const ProductDetailsScreen = ({ route }) => {
                         keyExtractor={item => item.id.toString()}
                         renderItem={({ item }) => (
                             <View style={styles.reviewItem}>
-                                <Text style={styles.reviewText}>Rating: {item.rating}</Text>
+                                <Text style={styles.reviewText}>Rating: {item.displayStars}</Text>
                                 <Text style={styles.reviewText}>Comment: {item.comment}</Text>
                                 <Text style={styles.reviewText}>By: {item.customerName}</Text>
                             </View>

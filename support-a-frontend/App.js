@@ -27,7 +27,7 @@ import BookingScreen from "./Screens/BookingScreen";
 import BookingConfirmationScreen from './Screens/BookingConfirmationScreen';
 import ProductDetailsScreen from './Screens/ProductDetailsScreen';
 import EntrepreneurAnalyticsScreen from "./Screens/EntrepreneurAnalyticsScreen";
-
+import ConfirmationScreen from './Screens/ConfirmationScreen';
 
 
 
@@ -64,6 +64,7 @@ export default function App() {
                 <Stack.Screen name="BookingScreen" component={BookingScreen} options={{title: 'Booking Screen'}}/>
                 <Stack.Screen name="BookingConfirmationScreen" component={BookingConfirmationScreen} options={{ title: 'Booking Confirmation' }}/>
                 <Stack.Screen name="ProductDetailsScreen" component={ProductDetailsScreen} options={{title: 'Product Details Screen'}}/>
+                <Stack.Screen name="Confirmation" component={ConfirmationScreen} options={{ title: 'Confirmation' }} />
             </Stack.Navigator>
         </NavigationContainer>
     );
