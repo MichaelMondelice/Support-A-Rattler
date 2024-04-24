@@ -32,7 +32,8 @@ const OrdersScreen = () => {
                     id: orderDoc.id,
                     ...orderData,
                     customerName: `${customerData.firstName} ${customerData.lastName}`,
-                    statusSelection: orderData.Status
+                    // Set default status to "Order Confirmed" if not already defined
+                    statusSelection: orderData.Status || "Order Confirmed"
                 };
             }));
 

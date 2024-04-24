@@ -119,7 +119,7 @@ const CustomerHomeScreen = ({ navigation }) => {
                     <MaterialCommunityIcons name="home" size={24} color="#4CAF50" />
                     <Text style={styles.tabTitle}>Home</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.tabItem} onPress={() => navigation.navigate('Messages')}>
+                <TouchableOpacity style={styles.tabItem} onPress={() => navigation.navigate('CustomerMessages')}>
                     <MaterialCommunityIcons name="message" size={24} color="#4CAF50" />
                     <Text style={styles.tabTitle}>Messages</Text>
                 </TouchableOpacity>

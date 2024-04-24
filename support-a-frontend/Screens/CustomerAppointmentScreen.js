@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, ScrollView } from 'react-native';
 import { getAuth } from "firebase/auth";
 import { db } from "../firebase";
-import { collection, query, where, getDocs, deleteDoc, doc, getDoc } from "firebase/firestore";
+import { collection, query, where, getDocs, updateDoc, doc, getDoc } from "firebase/firestore";
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
-const CustomerAppointmentScreen = () => {
+const CustomerAppointmentScreen = ({ navigation }) => {
     const [appointments, setAppointments] = useState([]);
 
     useEffect(() => {
@@ -28,11 +29,11 @@ const CustomerAppointmentScreen = () => {
                             id: docSnapshot.id,
                             businessName: serviceData.businessName,
                             category: serviceData.category,
-                            time: appointmentData.time
+                            time: appointmentData.time,
+                            status: appointmentData.status || 'Scheduled' // Ensure status is displayed
                         });
                     }
                 }
-
                 setAppointments(fetchedAppointments);
             } else {
                 Alert.alert("Error", "You must be signed in to view your appointments.");
@@ -42,18 +43,6 @@ const CustomerAppointmentScreen = () => {
         fetchAppointments();
     }, []);
 
-   /* const handleDeleteAppointment = async (appointmentId) => {
-        try {
-            await deleteDoc(doc(db, "AppointmentsBooked", appointmentId));
-            setAppointments(appointments.filter(appointment => appointment.id !== appointmentId));
-            Alert.alert("Success", "Appointment deleted successfully.");
-        } catch (error) {
-            console.error("Error deleting appointment: ", error);
-            Alert.alert("Error", "Failed to delete appointment.");
-        }
-    };*/
-
-    // Adjust function to cancel appointment instead of deleting
     const handleCancelAppointment = async (appointmentId) => {
         const appointmentRef = doc(db, "AppointmentsBooked", appointmentId);
         try {
@@ -72,23 +61,52 @@ const CustomerAppointmentScreen = () => {
             Alert.alert("Error", "Failed to cancel appointment.");
         }
     };
+
     return (
         <View style={styles.container}>
-            <FlatList
-                data={appointments}
-                keyExtractor={item => item.id}
-                renderItem={({ item }) => (
-                    <View style={styles.appointmentItem}>
-                        <Text style={styles.appointmentText}>Business Name: {item.businessName}</Text>
-                        <Text style={styles.appointmentText}>Category: {item.category}</Text>
-                        <Text style={styles.appointmentText}>Time: {item.time}</Text>
-                        <Text style={styles.appointmentText}>Status: {item.status}</Text>
-                        <TouchableOpacity style={styles.deleteButton} onPress={() => handleCancelAppointment(item.id)}>
-                            <Text style={styles.deleteButtonText}>Cancel</Text>
-                        </TouchableOpacity>
-                    </View>
-                )}
-            />
+            <ScrollView style={styles.scrollView}>
+                <FlatList
+                    data={appointments}
+                    keyExtractor={item => item.id}
+                    renderItem={({ item }) => (
+                        <View style={styles.appointmentItem}>
+                            <Text style={styles.appointmentText}>Business Name: {item.businessName}</Text>
+                            <Text style={styles.appointmentText}>Category: {item.category}</Text>
+                            <Text style={styles.appointmentText}>Time: {item.time}</Text>
+                            <Text style={styles.appointmentText}>Status: {item.status}</Text>
+                            <TouchableOpacity style={styles.deleteButton} onPress={() => handleCancelAppointment(item.id)}>
+                                <Text style={styles.deleteButtonText}>Cancel</Text>
+                            </TouchableOpacity>
+                        </View>
+                    )}
+                />
+            </ScrollView>
+            <View style={styles.tabBarContainer}>
+                <TouchableOpacity style={styles.tabItem} onPress={() => navigation.navigate('CustomerHome')}>
+                    <MaterialCommunityIcons name="home" size={24} color="#4CAF50" />
+                    <Text style={styles.tabTitle}>Home</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.tabItem} onPress={() => navigation.navigate('CustomerMessages')}>
+                    <MaterialCommunityIcons name="message" size={24} color="#4CAF50" />
+                    <Text style={styles.tabTitle}>Messages</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.tabItem} onPress={() => navigation.navigate('CustomerSearchScreen')}>
+                    <MaterialCommunityIcons name="magnify" size={24} color="#4CAF50" />
+                    <Text style={styles.tabTitle}>Search</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.tabItem} onPress={() => navigation.navigate('CustomerOrdersScreen')}>
+                    <MaterialCommunityIcons name="format-list-bulleted" size={24} color="#4CAF50" />
+                    <Text style={styles.tabTitle}>Orders</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.tabItem} onPress={() => navigation.navigate('CustomerAppointmentScreen')}>
+                    <MaterialCommunityIcons name="calendar" size={24} color="#4CAF50" />
+                    <Text style={styles.tabTitle}>Appointments</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.tabItem} onPress={() => navigation.navigate('CustomerAccountScreen')}>
+                    <MaterialCommunityIcons name="account" size={24} color="#4CAF50" />
+                    <Text style={styles.tabTitle}>Account</Text>
+                </TouchableOpacity>
+            </View>
         </View>
     );
 };
@@ -97,7 +115,9 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#DFF2E3',
-        padding: 20,
+    },
+    scrollView: {
+        flex: 1,
     },
     appointmentItem: {
         backgroundColor: '#C8E6C9',
@@ -111,7 +131,7 @@ const styles = StyleSheet.create({
     },
     deleteButton: {
         marginTop: 10,
-        backgroundColor: '#FF6347', // Tomato color for the delete button
+        backgroundColor: '#FF6347', // Tomato color for the cancel button
         padding: 10,
         borderRadius: 6,
         alignItems: 'center',
@@ -120,6 +140,23 @@ const styles = StyleSheet.create({
         color: '#FFFFFF',
         fontWeight: 'bold',
     },
+    tabBarContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+        backgroundColor: '#FFFFFF',
+        borderTopWidth: 1,
+        borderTopColor: '#E0E0E0',
+        paddingBottom: 10,
+        paddingTop: 5,
+    },
+    tabItem: {
+        alignItems: 'center',
+    },
+    tabTitle: {
+        fontSize: 12,
+        color: '#757575',
+        paddingTop: 4,
+    }
 });
 
 export default CustomerAppointmentScreen;

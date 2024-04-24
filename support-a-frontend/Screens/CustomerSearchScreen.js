@@ -103,6 +103,32 @@ const CustomerSearchScreen = ({ navigation }) => {
                     )}
                 />
             </ScrollView>
+            <View style={styles.tabBarContainer}>
+                <TouchableOpacity style={styles.tabItem} onPress={() => navigation.navigate('CustomerHome')}>
+                    <MaterialCommunityIcons name="home" size={24} color="#4CAF50" />
+                    <Text style={styles.tabTitle}>Home</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.tabItem} onPress={() => navigation.navigate('CustomerMessages')}>
+                    <MaterialCommunityIcons name="message" size={24} color="#4CAF50" />
+                    <Text style={styles.tabTitle}>Messages</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.tabItem} onPress={() => navigation.navigate('CustomerSearchScreen')}>
+                    <MaterialCommunityIcons name="magnify" size={24} color="#4CAF50" />
+                    <Text style={styles.tabTitle}>Search</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.tabItem} onPress={() => navigation.navigate('CustomerOrdersScreen')}>
+                    <MaterialCommunityIcons name="format-list-bulleted" size={24} color="#4CAF50" />
+                    <Text style={styles.tabTitle}>Orders</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.tabItem} onPress={() => navigation.navigate('CustomerAppointmentScreen')}>
+                    <MaterialCommunityIcons name="calendar" size={24} color="#4CAF50" />
+                    <Text style={styles.tabTitle}>Appointments</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.tabItem} onPress={() => navigation.navigate('CustomerAccountScreen')}>
+                    <MaterialCommunityIcons name="account" size={24} color="#4CAF50" />
+                    <Text style={styles.tabTitle}>Account</Text>
+                </TouchableOpacity>
+            </View>
         </View>
     );
 };
@@ -188,7 +214,6 @@ const styles = StyleSheet.create({
         marginBottom: 20,
         borderRadius: 6,
     },
-
 });
 
 export default CustomerSearchScreen;

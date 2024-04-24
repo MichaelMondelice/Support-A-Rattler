@@ -64,7 +64,7 @@ const ProductDetailsScreen = ({ navigation, route }) => {
                 ProdServID: product.id,
                 ProductName: product.productName,
                 Quantity: quantity,
-                Status: "Payment Received",
+                Status: "Order Received",
                 TotalPrice: totalPrice
             });
             navigation.navigate('Confirmation', { message: "Your order has been placed.\nThank you for shopping with Support - A - Rattler!!" });
