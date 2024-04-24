@@ -64,9 +64,7 @@ const EntrepreneurHomeScreen = ({ navigation }) => {
                 <TouchableOpacity style={styles.sidebarItem} onPress={() => navigation.navigate('ServicesProducts')}>
                     <Text style={styles.sidebarText}>Services/Products</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.sidebarItem} onPress={() => navigation.navigate('EntrepreneurAnalytics')}>
-                    <Text style={styles.sidebarText}>Analytics</Text>
-                </TouchableOpacity>
+                {/* Analytics Tab Removed */}
                 <TouchableOpacity style={styles.sidebarItem} onPress={() => navigation.navigate('Messages')}>
                     <Text style={styles.sidebarText}>Messages</Text>
                 </TouchableOpacity>
