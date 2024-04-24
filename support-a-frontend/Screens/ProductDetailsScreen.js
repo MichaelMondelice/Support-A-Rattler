@@ -9,25 +9,28 @@ const ProductDetailsScreen = ({ navigation, route }) => {
     const [review, setReview] = useState('');
     const [rating, setRating] = useState(0);
     const [reviews, setReviews] = useState([]);
+    const [averageRating, setAverageRating] = useState(0);
 
     useEffect(() => {
         const fetchReviews = async () => {
             const reviewsQuery = query(collection(db, "Review"), where("ProductID", "==", product.id));
             const querySnapshot = await getDocs(reviewsQuery);
-            const reviewsWithUser = await Promise.all(querySnapshot.docs.map(async reviewDoc => {
+            let allReviews = [];
+            for (const reviewDoc of querySnapshot.docs) {
                 const reviewData = reviewDoc.data();
                 const userRef = doc(db, "User", reviewData.CustomerID);
                 const userSnap = await getDoc(userRef);
                 const fullName = userSnap.exists() ? `${userSnap.data().firstName} ${userSnap.data().lastName}` : "Unnamed User";
-                return {
+                allReviews.push({
                     id: reviewDoc.id,
                     comment: reviewData.Comment,
                     rating: reviewData.Rating,
                     customerName: fullName,
                     displayStars: getStars(reviewData.Rating)
-                };
-            }));
-            setReviews(reviewsWithUser);
+                });
+            }
+            setReviews(allReviews);
+            updateAverageRating(allReviews);
         };
 
         fetchReviews().catch(error => {
@@ -36,9 +39,15 @@ const ProductDetailsScreen = ({ navigation, route }) => {
         });
     }, [product.id]);
 
+    const updateAverageRating = (reviews) => {
+        const totalRating = reviews.reduce((acc, cur) => acc + cur.rating, 0);
+        const average = reviews.length > 0 ? (totalRating / reviews.length).toFixed(1) : 0;
+        setAverageRating(average);
+    };
+
     const getStars = (rating) => (
         <Text style={{ color: '#FFD700', fontSize: 18 }}>
-            {'★'.repeat(rating) + '☆'.repeat(5 - rating)}
+            {'★'.repeat(Math.floor(rating)) + '☆'.repeat(5 - Math.floor(rating))}
         </Text>
     );
 
@@ -58,7 +67,7 @@ const ProductDetailsScreen = ({ navigation, route }) => {
                 Status: "Payment Received",
                 TotalPrice: totalPrice
             });
-            navigation.navigate('Confirmation', { message: "Your order has been placed \nThank you for shopping with Support-A-Rattler!!" });
+            navigation.navigate('Confirmation', { message: "Your order has been placed.\nThank you for shopping with Support - A - Rattler!!" });
         } catch (error) {
             console.error("Order Error:", error);
             Alert.alert("Error", "Failed to place order.");
@@ -71,17 +80,26 @@ const ProductDetailsScreen = ({ navigation, route }) => {
             return;
         }
         try {
-            await addDoc(collection(db, "Review"), {
+            const newDocRef = await addDoc(collection(db, "Review"), {
                 ProductID: product.id,
                 CustomerID: auth.currentUser.uid,
-                Rating: rating,
+                Rating: parseInt(rating, 10),
                 Comment: review,
                 Timestamp: serverTimestamp()
             });
+            const newReview = {
+                id: newDocRef.id,
+                rating: parseInt(rating, 10),
+                comment: review,
+                customerName: "You",
+                displayStars: getStars(rating)
+            };
+            setReviews([...reviews, newReview]);
+            updateAverageRating([...reviews, newReview]);
             setReview('');
             setRating(0);
-            navigation.navigate('Confirmation', { message: "Your Review has been Submitted \nwSupport-A-Rattler Appreciates Your Feedback!!" });
-        } catch (error) {
+            navigation.navigate('Confirmation', { message: "Your review has been submitted.\nSupport-A-Rattler appreciates your feedback!!" });
+        } catch ( error ) {
             console.error("Review Submission Error:", error);
             Alert.alert("Error", "Failed to submit review.");
         }
@@ -97,17 +115,12 @@ const ProductDetailsScreen = ({ navigation, route }) => {
             <View style={styles.orderSection}>
                 <TextInput
                     style={styles.quantityInput}
-                    value={quantity}
-                    onChangeText={text => setQuantity(text.replace(/[^0-9]/g, ''))} // Ensure only numbers can be entered
+                    value={quantity.toString()}
+                    onChangeText={text => setQuantity(Number(text))}
                     placeholder="0"
                     keyboardType="numeric"
                 />
-                <Button
-                    title="Place Order"
-                    onPress={handleOrder}
-                    color="#4CAF50"
-                    disabled={!quantity} // Disable button if quantity is zero or not set
-                />
+                <Button title="Place Order" onPress={handleOrder} color="#4CAF50" />
             </View>
 
             <View style={styles.reviewSection}>
@@ -126,7 +139,7 @@ const ProductDetailsScreen = ({ navigation, route }) => {
                     keyboardType="numeric"
                 />
                 <Button title="Submit Review" onPress={handleReviewSubmit} color="#4CAF50" />
-                <Text style={styles.reviewsHeader}>Reviews</Text>
+                <Text style={styles.reviewsHeader}>Reviews - Average Rating: {averageRating}</Text>
                 {reviews.length > 0 ? (
                     <FlatList
                         data={reviews}
