@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TextInput, Button } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TextInput, Button, Alert } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
-import { collection, getDocs, doc, updateDoc, query, where, getDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, updateDoc, query, where, deleteDoc, getDoc } from 'firebase/firestore';
 import { db, auth } from '../firebase';
 
 const OrdersScreen = () => {
@@ -32,7 +32,7 @@ const OrdersScreen = () => {
                     id: orderDoc.id,
                     ...orderData,
                     customerName: `${customerData.firstName} ${customerData.lastName}`,
-                    statusSelection: orderData.Status // Maintain a separate status for the picker
+                    statusSelection: orderData.Status
                 };
             }));
 
@@ -66,6 +66,20 @@ const OrdersScreen = () => {
         }
     };
 
+    const handleCancelOrder = async (id) => {
+        const orderRef = doc(db, "Order", id);
+        try {
+            await deleteDoc(orderRef);
+            const updatedOrders = orders.filter(order => order.id !== id);
+            setOrders(updatedOrders);
+            setDisplayedOrders(updatedOrders);
+            Alert.alert("Success", "Order has been canceled successfully.");
+        } catch (error) {
+            console.error("Error canceling order:", error);
+            Alert.alert("Error", "Failed to cancel order.");
+        }
+    };
+
     return (
         <View style={styles.container}>
             <TextInput
@@ -95,8 +109,14 @@ const OrdersScreen = () => {
                             <Picker.Item label="Order Confirmed" value="Order Confirmed" />
                             <Picker.Item label="Order Shipped" value="Order Shipped" />
                             <Picker.Item label="Order Complete" value="Order Complete" />
-                            <Picker.Item label="Order Canceled" value="Order Canceled" />
                         </Picker>
+                        {(item.Status === "Order Received" || item.Status === "Order Confirmed") && (
+                            <Button
+                                title="Cancel Order"
+                                onPress={() => handleCancelOrder(item.id)}
+                                color="#FF6347"
+                            />
+                        )}
                     </View>
                 )}
             />
