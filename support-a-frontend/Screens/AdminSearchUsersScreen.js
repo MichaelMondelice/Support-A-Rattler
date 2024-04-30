@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, Button, FlatList, StyleSheet, TouchableOpacity, Image, Modal } from 'react-native';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, query, getDocs } from 'firebase/firestore';
 import { db } from '../firebase'; // Import your Firestore instance
 
 const AdminSearchUsersScreen = () => {
@@ -8,17 +8,17 @@ const AdminSearchUsersScreen = () => {
     const [searchResults, setSearchResults] = useState([]);
     const [selectedUser, setSelectedUser] = useState(null);
     const [modalVisible, setModalVisible] = useState(false);
+    const [originalUsers, setOriginalUsers] = useState([]);
 
     useEffect(() => {
         // Function to fetch users from Firebase Cloud Firestore
         const fetchUsers = async () => {
             try {
-                const querySnapshot = await getDocs(collection(db, 'User'));
-                const fetchedUsers = [];
-                querySnapshot.forEach((doc) => {
-                    fetchedUsers.push({ id: doc.id, ...doc.data() });
-                });
+                const q = query(collection(db, 'User'));
+                const querySnapshot = await getDocs(q);
+                const fetchedUsers = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 setSearchResults(fetchedUsers);
+                setOriginalUsers(fetchedUsers); // Set the original list of users
             } catch (error) {
                 console.error('Error fetching users:', error);
             }
@@ -30,9 +30,10 @@ const AdminSearchUsersScreen = () => {
 
     // Function to handle search action
     const handleSearch = () => {
-        // Filter search results based on the searchQuery
-        const filteredResults = searchResults.filter(user =>
-            user.name.toLowerCase().includes(searchQuery.toLowerCase())
+        // Filter search results based on the searchQuery from the originalUsers list
+        const filteredResults = originalUsers.filter(user =>
+            (user.firstName && user.firstName.toLowerCase().includes(searchQuery.toLowerCase())) ||
+            (user.lastName && user.lastName.toLowerCase().includes(searchQuery.toLowerCase()))
         );
         setSearchResults(filteredResults);
     };
@@ -43,16 +44,34 @@ const AdminSearchUsersScreen = () => {
         setModalVisible(true);
     };
 
+    // Function to handle filtering by role
+    const handleFilterByRole = (role) => {
+        if (role === 'All') {
+            setSearchResults(originalUsers);
+        } else {
+            const filteredResults = originalUsers.filter(user => user.role === role);
+            setSearchResults(filteredResults);
+        }
+    };
+
     return (
         <View style={styles.container}>
-            <TextInput
-                style={styles.searchInput}
-                placeholder="Search Users"
-                placeholderTextColor="#000000"
-                value={searchQuery}
-                onChangeText={setSearchQuery}
-            />
-            <Button title="Search" onPress={handleSearch} color="#4CAF50" />
+            <View style={styles.searchContainer}>
+                <TextInput
+                    style={styles.searchInput}
+                    placeholder="Search Users"
+                    placeholderTextColor="#000000"
+                    value={searchQuery}
+                    onChangeText={setSearchQuery}
+                />
+                <Button title="Search" onPress={handleSearch} color="#4CAF50" />
+            </View>
+
+            <View style={styles.buttonContainer}>
+                <Button title="Customer" onPress={() => handleFilterByRole('Customer')} color="#4CAF50" />
+                <Button title="Entrepreneur" onPress={() => handleFilterByRole('Entrepreneur')} color="#4CAF50" />
+                <Button title="All" onPress={() => handleFilterByRole('All')} color="#4CAF50" />
+            </View>
 
             <FlatList
                 data={searchResults}
@@ -103,14 +122,25 @@ const styles = StyleSheet.create({
         padding: 20,
         backgroundColor: '#E8F5E9',
     },
+    searchContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 10,
+    },
     searchInput: {
+        flex: 1,
         height: 40,
         borderWidth: 1,
         borderColor: '#000000',
         borderRadius: 5,
         paddingHorizontal: 10,
-        marginBottom: 10,
+        marginRight: 10,
         color: '#000000',
+    },
+    buttonContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginBottom: 10,
     },
     card: {
         backgroundColor: '#ffffff',
@@ -153,7 +183,7 @@ const styles = StyleSheet.create({
         marginTop: 20,
     },
     modal: {
-        backgroundColor: '#E8F5E9',
+        backgroundColor: 'rgba(203,68,21,0.78)',
         borderRadius: 10,
         padding: 20,
         alignItems: 'center',
