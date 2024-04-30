@@ -171,7 +171,7 @@ const styles = StyleSheet.create({
             padding: 12,
             borderBottomWidth: 1,
             borderBottomColor: '#ccc',
-            backgroundColor: '#E8F5E9',  // Light green to match the theme
+            backgroundColor: '#4CAF50',  // Light green to match the theme
             borderRadius: 5,
             margin: 5,
             shadowColor: '#000',

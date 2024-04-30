@@ -153,7 +153,7 @@ const styles = StyleSheet.create({
         marginTop: 20,
     },
     modal: {
-        backgroundColor: '#ffffff',
+        backgroundColor: '#E8F5E9',
         borderRadius: 10,
         padding: 20,
         alignItems: 'center',
