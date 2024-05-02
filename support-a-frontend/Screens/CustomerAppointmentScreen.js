@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, ScrollView } from 'react-native';
 import { getAuth } from "firebase/auth";
 import { db } from "../firebase";
-import { collection, query, where, getDocs, updateDoc, doc, getDoc } from "firebase/firestore";
+import { collection, query, where, getDocs, deleteDoc, doc, getDoc } from "firebase/firestore";
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 const CustomerAppointmentScreen = ({ navigation }) => {
@@ -46,15 +46,11 @@ const CustomerAppointmentScreen = ({ navigation }) => {
     const handleCancelAppointment = async (appointmentId) => {
         const appointmentRef = doc(db, "AppointmentsBooked", appointmentId);
         try {
-            await updateDoc(appointmentRef, {
-                status: "Canceled" // Adding a new status field to indicate cancellation
-            });
-            const updatedAppointments = appointments.map(appointment => {
-                if (appointment.id === appointmentId) {
-                    return { ...appointment, status: "Canceled" };
-                }
-                return appointment;
-            });
+            // Delete the appointment from Firebase
+            await deleteDoc(appointmentRef);
+
+            // Filter out the canceled appointment from the local state
+            const updatedAppointments = appointments.filter(appointment => appointment.id !== appointmentId);
             setAppointments(updatedAppointments);
         } catch (error) {
             console.error("Error canceling appointment: ", error);
