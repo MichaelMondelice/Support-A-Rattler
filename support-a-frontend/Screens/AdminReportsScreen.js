@@ -11,6 +11,7 @@ const AdminReportsScreen = () => {
     const [selectedItem, setSelectedItem] = useState(null);
     const [entrepreneurCounter, setEntrepreneurCounter] = useState(0);
     const [productCounter, setProductCounter] = useState(0);
+    const [serviceCounter, setServiceCounter] = useState(0);
 
     useEffect(() => {
         fetchEntrepreneurs();
@@ -37,6 +38,16 @@ const AdminReportsScreen = () => {
             setProductCounter(count);
         }
     }, [products]);
+
+    useEffect(() => {
+        if (services.length > 0) {
+            let count = 0;
+            services.forEach((service) => {
+                count += service.appointments.length;
+            });
+            setServiceCounter(count);
+        }
+    }, [services]);
 
     const fetchEntrepreneurs = async () => {
         const usersQuery = query(collection(db, 'User'));
@@ -102,7 +113,27 @@ const AdminReportsScreen = () => {
             id: doc.id,
             appointments: []
         }));
+
+        // Update the appointments array for each service
+        for (const service of services) {
+            const appointmentsQuery = query(collection(db, 'AppointmentsBooked'), where('serviceId', '==', service.id));
+            const appointmentsData = await getDocs(appointmentsQuery);
+            const appointments = appointmentsData.docs.map(doc => ({
+                customerEmail: doc.data().customerEmail,
+                customerName: doc.data().customerName,
+                time: doc.data().time
+            }));
+            service.appointments = appointments;
+        }
+
         setServices(services);
+
+        // Update the service counter
+        let count = 0;
+        services.forEach((service) => {
+            count += service.appointments.length;
+        });
+        setServiceCounter(count);
     };
 
     const handleProductClick = async (product) => {
@@ -136,6 +167,15 @@ const AdminReportsScreen = () => {
             time: doc.data().time
         }));
         setSelectedItem({ ...service, appointments });
+
+        // Update the counter for the clicked service
+        const updatedServices = services.map(s => {
+            if (s.id === service.id) {
+                return { ...s, appointments: appointments };
+            }
+            return s;
+        });
+        setServices(updatedServices);
     };
 
     const changeTab = (tab) => {
@@ -168,15 +208,21 @@ const AdminReportsScreen = () => {
                     </>
                 );
             case 'Services':
-                return services.map((service, index) => (
-                    <TouchableOpacity key={index} style={styles.button} onPress={() => handleServiceClick(service)}>
-                        <Text style={styles.buttonText}>{service.businessName} / {service.category}</Text>
-                    </TouchableOpacity>
-                ));
+                return (
+                    <>
+                        <Text style={styles.counterText}>Total Services appointments: {serviceCounter}</Text>
+                        {services.map((service, index) => (
+                            <TouchableOpacity key={index} style={styles.button} onPress={() => handleServiceClick(service)}>
+                                <Text style={styles.buttonText}>{service.businessName} / {service.category} ({service.appointments.length})</Text>
+                            </TouchableOpacity>
+                        ))}
+                    </>
+                );
             default:
                 return <View />;
         }
     };
+
 
     return (
         <ScrollView contentContainerStyle={styles.container}>
