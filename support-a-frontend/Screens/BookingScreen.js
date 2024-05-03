@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, StyleSheet, Button, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, TextInput, StyleSheet, Button, ScrollView, TouchableOpacity, Alert, FlatList } from 'react-native';
 import { collection, addDoc, query, where, getDocs } from "firebase/firestore";
 import { db } from "../firebase";
 
@@ -8,6 +8,10 @@ const BookingScreen = ({ route, navigation }) => {
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [availableSlots, setAvailableSlots] = useState([]);
+    const [review, setReview] = useState('');
+    const [rating, setRating] = useState(0);
+    const [reviews, setReviews] = useState([]);
+    const [averageRating, setAverageRating] = useState(0);
 
     useEffect(() => {
         const calculateTimeSlots = () => {
@@ -35,8 +39,31 @@ const BookingScreen = ({ route, navigation }) => {
             setAvailableSlots(filteredSlots);
         };
 
+        const fetchReviews = async () => {
+            const reviewsQuery = query(collection(db, "Review"), where("ServiceID", "==", service.id));
+            const querySnapshot = await getDocs(reviewsQuery);
+            let allReviews = [];
+            for (const reviewDoc of querySnapshot.docs) {
+                const reviewData = reviewDoc.data();
+                allReviews.push({
+                    id: reviewDoc.id,
+                    comment: reviewData.Comment,
+                    rating: reviewData.Rating,
+                });
+            }
+            setReviews(allReviews);
+            updateAverageRating(allReviews);
+        };
+
         initializeSlots();
+        fetchReviews();
     }, [service]);
+
+    const updateAverageRating = (reviews) => {
+        const totalRating = reviews.reduce((acc, cur) => acc + cur.rating, 0);
+        const average = reviews.length > 0 ? (totalRating / reviews.length).toFixed(1) : 0;
+        setAverageRating(average);
+    };
 
     const handleBooking = async (timeSlot) => {
         try {
@@ -53,7 +80,42 @@ const BookingScreen = ({ route, navigation }) => {
         }
     };
 
+    const handleReviewSubmit = async () => {
+        if (rating < 1 || rating > 5) {
+            Alert.alert("Invalid Rating", "Please enter a rating between 1 and 5.");
+            return;
+        }
+        try {
+            // Add the review document to the Firestore collection
+            const reviewDocRef = await addDoc(collection(db, "Review"), {
+                ServiceID: service.id,
+                Rating: parseInt(rating, 10),
+                Comment: review,
+            });
 
+            // Check if the review document is successfully added to the Firestore database
+            if (reviewDocRef.id) {
+                setReview('');
+                setRating(0);
+                const newReview = { comment: review, rating: parseInt(rating, 10), customerName: name };
+                setReviews([...reviews, newReview]);
+                updateAverageRating([...reviews, newReview]);
+                navigation.navigate('Confirmation', { message: "Your review has been submitted." });
+            } else {
+                throw new Error("Review document not added to Firestore.");
+            }
+        } catch (error) {
+            console.error("Review Submission Error:", error);
+            Alert.alert("Error", "Failed to submit review.");
+        }
+    };
+
+
+    const renderStars = (rating) => {
+        const filledStars = '★'.repeat(Math.floor(rating));
+        const emptyStars = '☆'.repeat(5 - Math.floor(rating));
+        return <Text style={{ color: '#FFD700' }}>{filledStars + emptyStars}</Text>;
+    };
 
     return (
         <ScrollView style={styles.container}>
@@ -68,6 +130,39 @@ const BookingScreen = ({ route, navigation }) => {
                     </TouchableOpacity>
                 ))}
             </View>
+
+            <Text style={styles.subtitle}>Leave a Review:</Text>
+            <TextInput
+                style={styles.reviewInput}
+                value={review}
+                onChangeText={setReview}
+                placeholder="Write your review here..."
+                multiline
+            />
+            <TextInput
+                style={styles.ratingInput}
+                value={rating.toString()}
+                onChangeText={text => setRating(Math.max(1, Math.min(5, Number(text))))}
+                placeholder="Rating (1-5)"
+                keyboardType="numeric"
+            />
+            <Button title="Submit Review" onPress={handleReviewSubmit} color="#4CAF50" />
+
+            <Text style={styles.reviewsHeader}>Reviews - Average Rating: {averageRating}</Text>
+            {reviews.length > 0 ? (
+                <FlatList
+                    data={reviews}
+                    keyExtractor={item => item.id}
+                    renderItem={({ item }) => (
+                        <View style={styles.reviewItem}>
+                            <Text style={styles.reviewText}>Rating: {renderStars(item.rating)}</Text>
+                            <Text style={styles.reviewText}>Comment: {item.comment}</Text>
+                        </View>
+                    )}
+                />
+            ) : (
+                <Text style={styles.reviewText}>No reviews yet.</Text>
+            )}
         </ScrollView>
     );
 };
@@ -114,6 +209,38 @@ const styles = StyleSheet.create({
     slotText: {
         fontSize: 16,
         color: '#333',
+    },
+    reviewInput: {
+        borderWidth: 1,
+        borderColor: '#4C6854',
+        padding: 10,
+        borderRadius: 6,
+        marginBottom: 10,
+        minHeight: 100,
+        backgroundColor: '#C8E6C9',
+    },
+    ratingInput: {
+        borderWidth: 1,
+        borderColor: '#4C6854',
+        padding: 10,
+        borderRadius: 6,
+        marginBottom: 10,
+        backgroundColor: '#C8E6C9',
+    },
+    reviewsHeader: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        marginTop: 20,
+        marginBottom: 5,
+    },
+    reviewItem: {
+        backgroundColor: '#E8F5E9',
+        padding: 10,
+        borderRadius: 6,
+        marginBottom: 10,
+    },
+    reviewText: {
+        fontSize: 16,
     },
 });
 
