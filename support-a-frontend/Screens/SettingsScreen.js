@@ -58,7 +58,7 @@ const SettingsScreen = ({ navigation }) => {
                 .then(() => deleteUser(user))
                 .then(() => {
                     Alert.alert("Success", "Account deleted successfully");
-                    navigation.replace('LoginScreen'); // Assuming 'LoginScreen' is the route name of your login screen
+                    navigation.replace('OptionsScreen'); // Assuming 'LoginScreen' is the route name of your login screen
                 })
                 .catch(error => {
                     console.error("Error deleting account: ", error);
