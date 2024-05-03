@@ -9,12 +9,34 @@ const AdminReportsScreen = () => {
     const [products, setProducts] = useState([]);
     const [services, setServices] = useState([]);
     const [selectedItem, setSelectedItem] = useState(null);
+    const [entrepreneurCounter, setEntrepreneurCounter] = useState(0);
+    const [productCounter, setProductCounter] = useState(0);
 
     useEffect(() => {
         fetchEntrepreneurs();
         fetchProducts();
         fetchServices();
     }, []);
+
+    useEffect(() => {
+        if (entrepreneurs.length > 0) {
+            let count = 0;
+            entrepreneurs.forEach((entrepreneur) => {
+                count += entrepreneur.products.length;
+            });
+            setEntrepreneurCounter(count);
+        }
+    }, [entrepreneurs]);
+
+    useEffect(() => {
+        if (products.length > 0) {
+            let count = 0;
+            products.forEach((product) => {
+                count += product.orders.length;
+            });
+            setProductCounter(count);
+        }
+    }, [products]);
 
     const fetchEntrepreneurs = async () => {
         const usersQuery = query(collection(db, 'User'));
@@ -48,7 +70,29 @@ const AdminReportsScreen = () => {
             id: doc.id,
             orders: []
         }));
+
+        // Update the orders array for each product
+        for (const product of products) {
+            const orderQuery = query(collection(db, 'Order'), where('ProdServID', '==', product.id));
+            const orderData = await getDocs(orderQuery);
+            const orders = orderData.docs.map(doc => ({
+                productName: doc.data().ProductName,
+                quantity: doc.data().Quantity,
+                status: doc.data().Status,
+                customerID: doc.data().CustomerID,
+                customerEmail: doc.data().CustomerEmail
+            }));
+            product.orders = orders;
+        }
+
         setProducts(products);
+
+        // Update the product counter
+        let count = 0;
+        products.forEach((product) => {
+            count += product.orders.length;
+        });
+        setProductCounter(count);
     };
 
     const fetchServices = async () => {
@@ -64,20 +108,23 @@ const AdminReportsScreen = () => {
     const handleProductClick = async (product) => {
         const orderQuery = query(collection(db, 'Order'), where('ProdServID', '==', product.id));
         const orderData = await getDocs(orderQuery);
-        const usersSnapshot = await getDocs(collection(db, 'User'));
-        const users = usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        const orders = orderData.docs.map(doc => {
-            const customer = users.find(user => user.id === doc.data().CustomerID);
-            return {
-                productName: doc.data().ProductName,
-                quantity: doc.data().Quantity,
-                status: doc.data().Status,
-                firstName: customer ? customer.firstName : 'Unknown',
-                lastName: customer ? customer.lastName : 'Unknown',
-                email: customer ? customer.email : 'No email'
-            };
-        });
+        const orders = orderData.docs.map(doc => ({
+            productName: doc.data().ProductName,
+            quantity: doc.data().Quantity,
+            status: doc.data().Status,
+            customerID: doc.data().CustomerID,
+            customerEmail: doc.data().CustomerEmail
+        }));
         setSelectedItem({ ...product, orders });
+
+        // Update the counter for the clicked product
+        const updatedProducts = products.map(p => {
+            if (p.id === product.id) {
+                return { ...p, orders: orders };
+            }
+            return p;
+        });
+        setProducts(updatedProducts);
     };
 
     const handleServiceClick = async (service) => {
@@ -99,17 +146,27 @@ const AdminReportsScreen = () => {
     const renderTabContent = () => {
         switch (activeTab) {
             case 'Entrepreneurs':
-                return entrepreneurs.map((entrepreneur, index) => (
-                    <TouchableOpacity key={index} style={styles.button} onPress={() => setSelectedItem(entrepreneur)}>
-                        <Text style={styles.buttonText}>{entrepreneur.firstName} / {entrepreneur.email}</Text>
-                    </TouchableOpacity>
-                ));
+                return (
+                    <>
+                        <Text style={styles.counterText}>Total Entrepreneurs orders: {entrepreneurCounter}</Text>
+                        {entrepreneurs.map((entrepreneur, index) => (
+                            <TouchableOpacity key={index} style={styles.button} onPress={() => setSelectedItem(entrepreneur)}>
+                                <Text style={styles.buttonText}>{entrepreneur.firstName} / {entrepreneur.email} ({entrepreneur.products.length})</Text>
+                            </TouchableOpacity>
+                        ))}
+                    </>
+                );
             case 'Products':
-                return products.map((product, index) => (
-                    <TouchableOpacity key={index} style={styles.button} onPress={() => handleProductClick(product)}>
-                        <Text style={styles.buttonText}>{product.businessName} / {product.productName}</Text>
-                    </TouchableOpacity>
-                ));
+                return (
+                    <>
+                        <Text style={styles.counterText}>Total Products orders: {productCounter}</Text>
+                        {products.map((product, index) => (
+                            <TouchableOpacity key={index} style={styles.button} onPress={() => handleProductClick(product)}>
+                                <Text style={styles.buttonText}>{product.businessName} / {product.productName} ({product.orders.length})</Text>
+                            </TouchableOpacity>
+                        ))}
+                    </>
+                );
             case 'Services':
                 return services.map((service, index) => (
                     <TouchableOpacity key={index} style={styles.button} onPress={() => handleServiceClick(service)}>
@@ -190,6 +247,11 @@ const styles = StyleSheet.create({
     buttonText: {
         color: '#FFF',
         textAlign: 'center',
+    },
+    counterText: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        marginBottom: 10,
     },
     detailContainer: {
         backgroundColor: '#ffffff',
