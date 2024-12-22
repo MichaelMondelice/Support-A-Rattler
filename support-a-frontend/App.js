@@ -66,6 +66,7 @@ export default function App() {
                 <Stack.Screen name="ProductDetailsScreen" component={ProductDetailsScreen} options={{title: 'Product Details Screen'}}/>
                 <Stack.Screen name="Confirmation" component={ConfirmationScreen} options={{ title: 'Confirmation' }} />
                 <Stack.Screen name="CustomerMessages" component={CustomerMessagesScreen} options={{ title: 'Customer Messages' }} />
+                <Stack.Screen name="OptionsScreen" component={OptionsScreen} options={{ title: 'Options Screen' }} />
             </Stack.Navigator>
         </NavigationContainer>
     );

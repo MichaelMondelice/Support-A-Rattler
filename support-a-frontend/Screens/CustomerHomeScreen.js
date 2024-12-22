@@ -16,15 +16,20 @@ const CustomerHomeScreen = ({ navigation }) => {
         'Technology': 'laptop',
         'Hair': 'hair-dryer',
         'Nails': 'nail',
-        'Barber': 'barber',
+        'Barber': 'scissors-cutting', // Using scissors icon for barber
         'Food': 'food',
         'Videography': 'camera',
         'Photography': 'camera',
         'Personal Trainer': 'run',
-        'Fashion': 'clothing',
-        'Tools' : 'tools',
-        // Add more category icons as needed
+        'Fashion': 'tshirt-crew',
+        'Tools': 'toolbox',
+        'Toy': 'dice-6',
+        'Body Care': 'shower',
     };
+
+
+
+
 
     useEffect(() => {
         const fetchUserDataAndData = async () => {
